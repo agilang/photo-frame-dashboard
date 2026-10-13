@@ -70,6 +70,35 @@ built without Gradle, that shows it. Hold two fingers still for 1.5 s to open a 
 launcher, Android settings, and reloading. On frames without system navigation, optional floating
 **Back** and **Dashboard** buttons help; see the [kiosk guide](dashboard/kiosk/README.md).
 
+### Run the dashboard locally
+
+Install dependencies and start Vite from the `dashboard/` directory:
+
+```sh
+cd dashboard
+npm install
+npm run dev
+```
+
+Open the local URL printed by Vite (usually <http://localhost:5173>). This is the quickest way to
+work on the UI. It serves the frontend directly, so it does not exercise the Cloudflare Worker or
+its access-key check.
+
+To test the built site without the Worker, run `npm run build` followed by `npm run preview` from
+`dashboard/`; Vite prints the preview URL (usually <http://localhost:4173>).
+
+To test the Worker and static-asset binding locally, build first, then start Wrangler from
+`dashboard/`:
+
+```sh
+npm run build
+npx wrangler dev
+```
+
+Open <http://localhost:8787/?key=YOUR_ACCESS_KEY>, replacing `YOUR_ACCESS_KEY` with the value of
+`VALID_KEY` in [`src/worker.js`](src/worker.js). A missing or incorrect key returns `403 Forbidden`.
+Stop either local server with `Ctrl+C`.
+
 ## For agents: start here
 
 You are probably helping someone with a similar device plugged into a Mac over USB. Read this
