@@ -5,6 +5,7 @@
 /loader-*.txt
 /.claude/
 .DS_Store
+.wrangler/
 __pycache__/
 *.pyc
 *.img
@@ -20,3 +21,14 @@ scripts/si006-webview-overlay/build/
 
 # Private per-frame records (docs/frame-records.md). No trailing slash, so a symlink is ignored too.
 /frames
+
+# Private dashboard integration credentials and personal photos.
+/dashboard/.dev.vars
+/dashboard/.dev.vars.*
+!/dashboard/.dev.vars.example
+/dashboard/eufy-bridge/.env
+/dashboard/eufy-bridge/.eufy-session.json
+/dashboard/eufy-bridge/.eufy-captcha.png
+/dashboard/eufy-bridge/node_modules/
+/dashboard/public/photos/*
+!/dashboard/public/photos/manifest.json

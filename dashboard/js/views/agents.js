@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var D = window.DATA;
-  var V = { el: null, loaded: Date.now(), synced: Date.now() - 2 * 60000 };
+  var V = { el: null, loaded: Date.now(), synced: Date.now() - 2 * 60000, view: 'usage', chat: [], sending: false };
 
   function pstyle(a) { return '--c:' + a.color + ';--c-rgb:' + a.rgb; }
   function minsLeft(m) { return Math.max(0, m.left - (Date.now() - V.loaded) / 60000); }
@@ -99,13 +99,54 @@
     return m < 1 ? 'Updated just now' : 'Updated ' + m + ' min ago';
   }
 
+  function aiChat() {
+    var configured = window.DASHBOARD_INTEGRATIONS.status.workersAi;
+    var messages = V.chat.map(function (message) {
+      return '<article class="ag-chat-message ag-chat-message--' + message.role + '"><span class="label">' + (message.role === 'user' ? 'You' : 'Assistant') + '</span><p>' + App.esc(message.content) + '</p></article>';
+    }).join('');
+    var empty = V.chat.length ? '' : '<div class="ag-chat-empty"><span class="label">Cloudflare Workers AI</span><h2 class="serif">What can I help with?</h2><p>Ask a question. This conversation stays in this browser tab.</p></div>';
+    var notice = configured ? '' : '<p class="ag-chat-notice">Workers AI requires an AI binding and a Wrangler session authenticated with Cloudflare.</p>';
+    return '<section class="ag-chat"><div class="ag-chat-log" role="log" aria-live="polite">' + empty + messages +
+      (V.sending ? '<article class="ag-chat-message ag-chat-message--assistant"><span class="label">Assistant</span><p>Thinking…</p></article>' : '') + '</div>' + notice +
+      '<form class="ag-chat-form" data-ai-form><textarea data-ai-input maxlength="4000" rows="2" placeholder="Message the assistant" aria-label="Message the assistant"' + (!configured || V.sending ? ' disabled' : '') + '></textarea>' +
+      '<div class="ag-chat-actions"><span class="label">' + App.esc(window.DASHBOARD_INTEGRATIONS.aiModel) + ' · Cloudflare Workers AI free daily allocation</span>' +
+      '<div><button class="btn btn--ghost" type="button" data-clear-chat' + (!V.chat.length || V.sending ? ' disabled' : '') + '>New chat</button>' +
+      '<button class="btn btn--solid" type="submit"' + (!configured || V.sending ? ' disabled' : '') + '>Send</button></div></div></form></section>';
+  }
+
   function render() {
     V.el.innerHTML = '<div class="agents">' +
       '<header class="ag-top"><div><div class="label">AI plans · usage limits</div><h1 class="serif">Agents</h1></div>' +
-      '<div class="ag-sync"><span class="label">' + synced() + '</span>' +
-      '<button class="icon-btn" data-refresh aria-label="Refresh">' + App.icon('undo', 26) + '</button></div></header>' +
-      '<div class="ag-grid">' + D.agents.map(card).join('') + summary() + '</div>' +
+      '<div class="ag-sync"><div class="seg"><button class="' + (V.view === 'usage' ? 'is-on' : '') + '" data-agent-view="usage">Usage</button><button class="' + (V.view === 'ai' ? 'is-on' : '') + '" data-agent-view="ai">AI Chat</button></div>' +
+      (V.view === 'usage' ? '<span class="label">' + synced() + '</span><button class="icon-btn" data-refresh aria-label="Refresh">' + App.icon('undo', 26) + '</button>' : '') + '</div></header>' +
+      (V.view === 'ai' ? aiChat() : '<div class="ag-grid">' + D.agents.map(card).join('') + summary() + '</div>') +
       '</div>';
+    if (V.view === 'ai') {
+      var log = V.el.querySelector('.ag-chat-log');
+      log.scrollTop = log.scrollHeight;
+    }
+  }
+
+  function sendChat(event) {
+    event.preventDefault();
+    if (V.sending || !window.DASHBOARD_INTEGRATIONS.status.workersAi) return;
+    var input = V.el.querySelector('[data-ai-input]');
+    var text = input.value.trim();
+    if (!text) return;
+    V.chat.push({ role: 'user', content: text });
+    V.sending = true;
+    render();
+    window.DASHBOARD_INTEGRATIONS.chatWithAI(V.chat.slice(-12)).then(function (result) {
+      V.chat.push({ role: 'assistant', content: result.text });
+      V.chat = V.chat.slice(-40);
+      V.sending = false;
+      render();
+    }).catch(function () {
+      V.chat.push({ role: 'assistant', content: 'The assistant could not respond. Check the Wrangler session and Workers AI quota.' });
+      V.chat = V.chat.slice(-40);
+      V.sending = false;
+      render();
+    });
   }
 
   App.register('agents', {
@@ -113,14 +154,21 @@
       if (!V.el) {
         V.el = el;
         el.addEventListener('click', function (e) {
+          var view = e.target.closest('[data-agent-view]');
+          if (view) { V.view = view.dataset.agentView; return render(); }
+          if (e.target.closest('[data-clear-chat]')) { V.chat = []; return render(); }
           var b = e.target.closest('[data-refresh]');
           if (!b) return;
           V.synced = Date.now();
           render();
         });
+        el.addEventListener('submit', function (e) {
+          if (e.target.matches('[data-ai-form]')) sendChat(e);
+        });
       }
       render();
     }
   });
+  App.on('workers-ai-status', function () { if (V.el && V.view === 'ai') render(); });
   App.on('minute', tick);
 })();

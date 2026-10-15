@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var D = window.DATA;
-  var V = { el: null, routine: null, pending: {} };
+  var V = { el: null, routine: null, pending: {}, source: 'chores' };
   var LANES = ['alex', 'jordan', 'maya', 'otto', 'any'];
 
   function routine() { return V.routine ? D.routines.filter(function (r) { return r.id === V.routine; })[0] : App.currentRoutine(); }
@@ -48,25 +48,89 @@
       '</section>';
   }
 
+  function googleTasks() {
+    var tasks = window.DASHBOARD_INTEGRATIONS.tasks;
+    return '<div class="ch-lanes ch-lanes--google"><section class="ch-lane">' +
+      '<header class="ch-head"><div><b>Google Tasks</b><span class="ch-sub">Synced online</span></div></header>' +
+      '<div class="ch-list">' + (tasks.length ? tasks.map(function (task) {
+        var due = task.due ? new Date(task.due) : null;
+        var dueText = due && Number.isFinite(+due) ? 'Due ' + App.fmt.monthShort(due) + ' ' + due.getDate() : task.list;
+        return '<button class="ch' + (task.completed ? ' is-done' : '') + '" data-google-task="' + App.esc(task.id) + '" data-google-list="' + App.esc(task.listId) + '"' + (task.choreId ? ' disabled' : '') + '><span class="ch-emoji">' + (task.completed ? '✓' : '□') + '</span>' +
+          '<span class="ch-text"><b>' + App.esc(task.title) + '</b><small>' + (task.choreId ? 'Linked chore · complete from Chores' : App.esc(dueText)) + '</small></span></button>';
+      }).join('') : '<div class="ch-none serif"><i>No Google Tasks found.</i></div>') + '</div></section></div>';
+  }
+
+  function addGoogleTask() {
+    App.sheet('<div class="sheet-pad"><div class="label">Google Tasks</div><h2 class="serif sheet-h">New task</h2>' +
+      '<input class="big-input serif" placeholder="What needs doing?" data-google-task-title>' +
+      '<div class="sheet-actions"><button class="btn btn--ghost" data-close>Cancel</button><button class="btn btn--solid" data-save-google-task>Add task</button></div></div>', {
+      onMount: function (sheet, close) {
+        var input = sheet.querySelector('[data-google-task-title]');
+        sheet.addEventListener('click', function (event) {
+          var button = event.target.closest('[data-save-google-task]');
+          if (!button) return;
+          var title = input.value.trim();
+          if (!title) { input.focus(); return; }
+          button.disabled = true;
+          window.DASHBOARD_INTEGRATIONS.createTask({ title: title }).then(function () {
+            close();
+            App.toast('Added <b>' + App.esc(title) + '</b> to Google Tasks', { icon: 'check' });
+          }).catch(function () {
+            button.disabled = false;
+            App.toast('Couldn’t add this task to Google Tasks', { tone: 'error', icon: 'check' });
+          });
+        });
+      }
+    });
+  }
+
+  function confirmChoreSync() {
+    var unlinked = D.chores.filter(function (chore) {
+      return !window.DASHBOARD_INTEGRATIONS.tasks.some(function (task) { return task.choreId === chore.id; });
+    }).length;
+    App.sheet('<div class="sheet-pad"><div class="label">Google Tasks</div><h2 class="serif sheet-h">Sync family chores?</h2>' +
+      '<p class="sheet-p">Create up to ' + unlinked + ' Google Tasks for chores that are not linked yet. Existing linked tasks will not be duplicated.</p>' +
+      '<div class="sheet-actions"><button class="btn btn--ghost" data-close>Cancel</button><button class="btn btn--solid" data-confirm-chore-sync>Sync chores</button></div></div>', {
+      onMount: function (sheet, close) {
+        sheet.addEventListener('click', function (event) {
+          var button = event.target.closest('[data-confirm-chore-sync]');
+          if (!button) return;
+          button.disabled = true;
+          window.DASHBOARD_INTEGRATIONS.syncChores().then(function (result) {
+            close();
+            App.toast('Synced ' + result.created + ' chores to Google Tasks', { icon: 'check' });
+          }).catch(function () {
+            button.disabled = false;
+            App.toast('Couldn’t sync chores to Google Tasks', { tone: 'error', icon: 'check' });
+          });
+        });
+      }
+    });
+  }
+
   function render() {
+    var google = V.source === 'google' && window.DASHBOARD_INTEGRATIONS.status.tasks;
     var r = routine(), auto = App.currentRoutine();
     var inR = D.chores.filter(function (c) { return c.r === r.id; });
     var done = inR.filter(function (c) { return c.done; }).length;
     V.el.innerHTML = '<div class="tasks">' +
       '<header class="t-head">' +
-      '<div class="t-title"><div class="label">' + (r.id === auto.id ? 'Right now · ' : '') + r.range + '</div><h1 class="serif">' + r.name + '</h1></div>' +
-      '<div class="seg">' + D.routines.map(function (x) { return '<button class="' + (x.id === r.id ? 'is-on' : '') + '" data-r="' + x.id + '">' + x.name + '</button>'; }).join('') + '</div>' +
-      '<div class="t-progress"><span class="num">' + done + '<small>/' + inR.length + '</small></span><div class="t-bar"><i style="width:' + (inR.length ? done / inR.length * 100 : 0) + '%"></i></div><span class="label">done</span></div>' +
+      '<div class="t-title"><div class="label">' + (google ? 'Google Tasks · online' : window.DASHBOARD_INTEGRATIONS.status.tasks ? 'Chores · Google connected' : 'Chores · Google not connected') + '</div><h1 class="serif">' + (google ? 'Tasks' : r.name) + '</h1></div>' +
+      (window.DASHBOARD_INTEGRATIONS.status.tasks ? '<div class="seg"><button class="' + (!google ? 'is-on' : '') + '" data-source="chores">Chores</button><button class="' + (google ? 'is-on' : '') + '" data-source="google">Google Tasks</button></div>' : '') +
+      (google ? '<div class="seg"><button data-add-google-task>Add task</button><button data-sync-chores>Sync chores</button></div>' : '') +
+      (!google ? '<div class="seg">' + D.routines.map(function (x) { return '<button class="' + (x.id === r.id ? 'is-on' : '') + '" data-r="' + x.id + '">' + x.name + '</button>'; }).join('') + '</div>' +
+      '<div class="t-progress"><span class="num">' + done + '<small>/' + inR.length + '</small></span><div class="t-bar"><i style="width:' + (inR.length ? done / inR.length * 100 : 0) + '%"></i></div><span class="label">done</span></div>' : '') +
       '</header>' +
-      '<div class="ch-lanes">' + LANES.map(function (w) { return lane(w, r); }).join('') + '</div>' +
+      (google ? googleTasks() : '<div class="ch-lanes">' + LANES.map(function (w) { return lane(w, r); }).join('') + '</div>') +
       '</div>';
   }
 
   function complete(c, btn, by) {
     var r = routine();
+    var linked = window.DASHBOARD_INTEGRATIONS.tasks.filter(function (task) { return task.choreId === c.id; })[0];
     V.pending[c.id] = true;
     btn.classList.add('is-checking');
-    setTimeout(function () {
+    function finish() {
       delete V.pending[c.id];
       c.done = true;
       if (by) c.doneBy = by;
@@ -84,14 +148,28 @@
       App.toast('<b>' + App.esc(c.title) + '</b> done' + (earner && c.stars ? ' · +' + c.stars + '★ ' + App.person(earner).name : ''), {
         icon: 'check',
         undo: function () {
-          c.done = false;
-          delete c.doneBy;
-          if (earner && c.stars) D.stars[earner] -= c.stars;
-          render();
-          App.emit('data');
+          function undoLocal() {
+            c.done = false;
+            delete c.doneBy;
+            if (earner && c.stars) D.stars[earner] -= c.stars;
+            render();
+            App.emit('data');
+          }
+          if (linked) {
+            window.DASHBOARD_INTEGRATIONS.updateTask(linked, false).then(undoLocal).catch(function () {
+              App.toast('Couldn’t undo this Google Task update', { tone: 'error', icon: 'check' });
+            });
+          } else undoLocal();
         }
       });
-    }, 350);
+    }
+    function failed() {
+      delete V.pending[c.id];
+      render();
+      App.toast('Couldn’t update the linked Google Task', { tone: 'error', icon: 'check' });
+    }
+    if (linked) window.DASHBOARD_INTEGRATIONS.updateTask(linked, true).then(finish).catch(failed);
+    else setTimeout(finish, 350);
   }
 
   // "Anyone" chores ask who did it, so stars go to the right kid
@@ -114,11 +192,44 @@
 
   function onClick(e) {
     var t;
+    if ((t = e.target.closest('[data-add-google-task]'))) return addGoogleTask();
+    if ((t = e.target.closest('[data-sync-chores]'))) return confirmChoreSync();
+    if ((t = e.target.closest('[data-google-task]'))) {
+      var task = window.DASHBOARD_INTEGRATIONS.tasks.filter(function (item) {
+        return item.id === t.dataset.googleTask && item.listId === t.dataset.googleList;
+      })[0];
+      if (!task || task.choreId) return;
+      t.disabled = true;
+      window.DASHBOARD_INTEGRATIONS.updateTask(task, !task.completed).catch(function () {
+        t.disabled = false;
+        App.toast('Couldn’t update this Google Task', { tone: 'error', icon: 'check' });
+      });
+      return;
+    }
+    if ((t = e.target.closest('[data-source]'))) { V.source = t.dataset.source; return render(); }
     if ((t = e.target.closest('[data-r]'))) { V.routine = t.dataset.r === App.currentRoutine().id ? null : t.dataset.r; return render(); }
     if ((t = e.target.closest('[data-ch]'))) {
       var c = D.chores.filter(function (x) { return x.id === t.dataset.ch; })[0];
       if (!c || V.pending[c.id]) return;
       if (c.done) {
+        var linked = window.DASHBOARD_INTEGRATIONS.tasks.filter(function (task) { return task.choreId === c.id; })[0];
+        if (linked) {
+          V.pending[c.id] = true;
+          render();
+          window.DASHBOARD_INTEGRATIONS.updateTask(linked, false).then(function () {
+            var earner = D.stars[c.who] != null ? c.who : (c.doneBy && D.stars[c.doneBy] != null ? c.doneBy : null);
+            if (earner && c.stars) D.stars[earner] -= c.stars;
+            delete c.doneBy;
+            delete V.pending[c.id];
+            render();
+            App.emit('data');
+          }).catch(function () {
+            delete V.pending[c.id];
+            render();
+            App.toast('Couldn’t update the linked Google Task', { tone: 'error', icon: 'check' });
+          });
+          return;
+        }
         c.done = false;
         var earner = D.stars[c.who] != null ? c.who : (c.doneBy && D.stars[c.doneBy] != null ? c.doneBy : null);
         if (earner && c.stars) D.stars[earner] -= c.stars;

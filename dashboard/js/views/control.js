@@ -32,6 +32,13 @@
         '<span class="tile-name">' + d.name + '</span>' +
         '<span class="tile-state num">' + (d.on ? d.level + '%' : 'Off') + '</span></div>';
     }
+    if (d.type === 'switch') {
+      return '<button class="tile tile--light' + (d.on ? ' is-on' : '') + '" data-ha-switch="' + App.esc(d.entityId) + '" style="--lvl:' + (d.on ? 100 : 0) + '%">' +
+        '<span class="tile-fill"></span>' +
+        '<span class="tile-icon">' + App.icon('bulb', 28) + '</span>' +
+        '<span class="tile-name">' + App.esc(d.name) + '</span>' +
+        '<span class="tile-state">' + (d.on ? 'On' : 'Off') + '</span></button>';
+    }
     if (d.type === 'blind') {
       return '<div class="tile tile--blind' + (d.pos > 0 ? ' is-on' : '') + '" data-dev="' + d.id + '" style="--lvl:' + d.pos + '%">' +
         '<span class="tile-fill"></span>' + pend +
@@ -80,12 +87,18 @@
     return on ? on + ' on' : 'All off';
   }
   function rooms() {
-    return D.rooms.map(function (r) {
+    var sections = D.rooms.map(function (r) {
       var list = D.devices.filter(function (d) { return d.room === r.id; });
       var on = list.filter(function (d) { return d.type === 'light' && d.on; }).length;
       return '<section class="room"><div class="room-h"><h3 class="serif">' + r.name + '</h3><span class="label" data-room-count="' + r.id + '">' + roomCount(r.id) + '</span></div>' +
         '<div class="tiles">' + list.map(tile).join('') + '</div></section>';
     }).join('');
+    if (window.DASHBOARD_INTEGRATIONS.status.homeAssistant) {
+      var remote = D.homeAssistantDevices || [];
+      sections += '<section class="room"><div class="room-h"><h3 class="serif">Home Assistant</h3><span class="label">' + remote.length + ' connected</span></div>' +
+        '<div class="tiles">' + remote.map(tile).join('') + '</div></section>';
+    }
+    return sections;
   }
 
   function climate() {
@@ -102,9 +115,29 @@
   }
 
   function cams() {
-    return '<div class="label">Cameras · snapshots every 20s</div><div class="cams">' + D.cameras.slice(0, 2).map(function (c) {
-      return '<button class="cam" data-cam="' + c.id + '"><img src="' + App.img(c.seed, 400, 250) + '" alt=""><span class="cam-name">' + c.name + '</span><span class="cam-age">' + V.camAge + 's ago</span></button>';
+    var list = allCameras();
+    var live = window.DASHBOARD_INTEGRATIONS.status.homeAssistant || window.DASHBOARD_INTEGRATIONS.status.eufy;
+    return '<div class="label">Cameras · ' + (live ? 'connected' : 'demo') + '</div><div class="cams">' + list.slice(0, 2).map(function (c) {
+      return '<button class="cam" data-cam="' + App.esc(c.id) + '" data-source="' + App.esc(c.source || 'demo') + '"><img src="' + cameraImage(c, false) + '" alt=""><span class="cam-name">' + App.esc(c.name) + '</span><span class="cam-age">' + (c.source === 'eufy' ? 'Latest stored image' : c.entityId ? 'Live snapshot' : V.camAge + 's ago') + '</span></button>';
     }).join('') + '</div>';
+  }
+
+  function allCameras() {
+    var list = [];
+    if (window.DASHBOARD_INTEGRATIONS.status.homeAssistant) list = list.concat(D.homeAssistantCameras || []);
+    if (window.DASHBOARD_INTEGRATIONS.status.eufy) list = list.concat(D.eufyCameras || []);
+    return list.length ? list : D.cameras.map(function (camera) { return Object.assign({ source: 'demo' }, camera); });
+  }
+
+  function cameraImage(camera, live) {
+    if (camera.source === 'eufy') {
+      var query = (live ? '?live=1&' : '?') + 'v=' + Date.now();
+      return window.DASHBOARD_INTEGRATIONS.url('/api/eufy/cameras/' + encodeURIComponent(camera.id) + '/snapshot' + query);
+    }
+    if (camera.entityId) {
+      return window.DASHBOARD_INTEGRATIONS.url('/api/home-assistant/camera?entity_id=' + encodeURIComponent(camera.entityId) + '&v=' + Date.now());
+    }
+    return App.img(camera.seed, live ? 1200 : 400, live ? 750 : 250);
   }
 
   function media() {
@@ -147,6 +180,7 @@
     rs.scrollTop = st;
     bindTiles(rs);
     el.querySelector('.hc-climate').innerHTML = climate();
+    el.querySelector('.hc-cams').innerHTML = cams();
     el.querySelector('.hc-media').innerHTML = media();
   }
 
@@ -240,7 +274,10 @@
   };
 
   App.cameraSheet = function (c) {
-    App.sheet('<div class="cam-big"><img src="' + App.img(c.seed, 1200, 750) + '" alt=""><div class="cam-big-bar"><span class="tk-live"><i></i>' + c.name + '</span><span class="label label--light">Snapshot · ' + V.camAge + 's ago</span></div></div>', { cls: 'sheet--cam' });
+    if (!c) return;
+    var image = cameraImage(c, c.source === 'eufy');
+    var source = c.source === 'eufy' ? 'Fresh Eufy capture' : c.entityId ? 'Home Assistant snapshot' : 'Demo snapshot';
+    App.sheet('<div class="cam-big"><img src="' + image + '" alt=""><div class="cam-big-bar"><span class="tk-live"><i></i>' + App.esc(c.name) + '</span><span class="label label--light">' + source + '</span></div></div>', { cls: 'sheet--cam' });
   };
 
   function listSheet(kind) {
@@ -304,6 +341,19 @@
 
   function onClick(e) {
     var t;
+    if ((t = e.target.closest('[data-ha-switch]'))) {
+      var remote = (D.homeAssistantDevices || []).filter(function (d) { return d.entityId === t.dataset.haSwitch; })[0];
+      if (!remote) return;
+      var before = remote.on;
+      remote.on = !before;
+      paint();
+      window.DASHBOARD_INTEGRATIONS.setSwitch(remote.entityId, remote.on).catch(function () {
+        remote.on = before;
+        paint();
+        App.toast('Couldn’t update <b>' + App.esc(remote.name) + '</b>', { tone: 'error', icon: 'bolt' });
+      });
+      return;
+    }
     if ((t = e.target.closest('[data-scene]'))) return applyScene(t.dataset.scene);
     if ((t = e.target.closest('[data-sum]'))) {
       var k = t.dataset.sum;
@@ -318,7 +368,7 @@
       return climateChanged();
     }
     if ((t = e.target.closest('[data-tmode]'))) { D.climate.mode = t.dataset.tmode; return climateChanged(); }
-    if ((t = e.target.closest('[data-cam]'))) return App.cameraSheet(D.cameras.filter(function (c) { return c.id === t.dataset.cam; })[0]);
+    if ((t = e.target.closest('[data-cam]'))) return App.cameraSheet(allCameras().filter(function (c) { return c.id === t.dataset.cam; })[0]);
     if ((t = e.target.closest('[data-play]'))) { D.media.playing = !D.media.playing; paintPart('.hc-media', media()); paintPart('.hc-sum', summary()); }
   }
   function climateChanged() { paintPart('.hc-climate', climate()); paintPart('.hc-sum', summary()); App.emit('data'); }

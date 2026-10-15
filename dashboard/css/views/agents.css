@@ -66,3 +66,28 @@
 .ag-legend span { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; color: rgba(255, 255, 255, .8); }
 .ag-legend i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
 .ag-legend span[style*="#111111"] i { background: #F2EEE6; }
+
+/* Grok chat */
+.ag-chat { width: min(100%, 920px); min-height: 0; flex: 1; display: flex; flex-direction: column; gap: 10px; margin: 0 auto; }
+.ag-chat-log { min-height: 0; flex: 1; overflow: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 14px; border-radius: var(--r); background: var(--card); }
+.ag-chat-empty { margin: auto; max-width: 520px; padding: 28px; text-align: center; }
+.ag-chat-empty h2 { margin: 10px 0; font-size: 36px; }
+.ag-chat-empty p { color: var(--mute); font-size: 16px; }
+.ag-chat-message { max-width: min(78%, 720px); padding: 12px 16px; border-radius: 12px; background: var(--paper-2); }
+.ag-chat-message--user { align-self: flex-end; background: var(--ink); color: var(--paper); }
+.ag-chat-message .label { display: block; margin-bottom: 5px; color: var(--mute); font-size: 12px; }
+.ag-chat-message--user .label { color: rgba(255, 255, 255, .7); }
+.ag-chat-message p { margin: 0; font-size: 16px; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ag-chat-form { flex: none; display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--card); }
+.ag-chat-form textarea { width: 100%; min-height: 66px; max-height: 150px; resize: vertical; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: 16px; }
+.ag-chat-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.ag-chat-actions > div { display: flex; align-items: center; gap: 8px; }
+.ag-chat-actions .label { font-size: 12px; color: var(--mute); }
+.ag-chat-notice { margin: 0; padding: 9px 12px; border-radius: var(--r); background: rgb(var(--amber-rgb) / .18); color: var(--ink-2); font-size: 14px; }
+.ag-tabs { margin-right: 4px; }
+
+@media (max-width: 760px) {
+  .ag-chat-message { max-width: 94%; }
+  .ag-chat-actions { align-items: flex-end; }
+  .ag-chat-actions > .label { max-width: 45%; }
+}
