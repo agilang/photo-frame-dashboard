@@ -64,8 +64,9 @@ Settings → About before you follow any guide:
 
 ## The dashboard
 
-[`dashboard/`](dashboard) is the family dashboard we run on the BIUFRAME (it uses mock data): a Vite
-web app deployed to Cloudflare Workers. `dashboard/kiosk/` is a small full-screen WebView Android app,
+[`dashboard/`](dashboard) is the family dashboard we run on the BIUFRAME: a Vite web app deployed to
+Cloudflare Workers, with demo-data fallback and optional Google and Home Assistant integrations.
+`dashboard/kiosk/` is a small full-screen WebView Android app,
 built without Gradle, that shows it. Hold two fingers still for 1.5 s to open a menu for the
 launcher, Android settings, and reloading. On frames without system navigation, optional floating
 **Back** and **Dashboard** buttons help; see the [kiosk guide](dashboard/kiosk/README.md).
@@ -91,13 +92,79 @@ To test the Worker and static-asset binding locally, build first, then start Wra
 `dashboard/`:
 
 ```sh
+cp .dev.vars.example .dev.vars
+# Edit .dev.vars with your own values before starting Wrangler.
 npm run build
 npx wrangler dev
 ```
 
-Open <http://localhost:8787/?key=YOUR_ACCESS_KEY>, replacing `YOUR_ACCESS_KEY` with the value of
-`VALID_KEY` in [`src/worker.js`](src/worker.js). A missing or incorrect key returns `403 Forbidden`.
-Stop either local server with `Ctrl+C`.
+Set `DASHBOARD_ACCESS_KEY` to a random value first (for example, generate one with
+`openssl rand -hex 32`). Open <http://localhost:8787/?key=YOUR_ACCESS_KEY> with that value; the
+Worker exchanges it for an HttpOnly session cookie. Do not commit `.dev.vars`.
+
+#### Live services
+
+Live services are optional. Without their configuration the dashboard keeps its demo data. Add your
+own values to the ignored `dashboard/.dev.vars` file; never put provider tokens in browser code or
+commit them.
+
+- **Google Calendar and Tasks:** create Google OAuth credentials, enable the Calendar API and Tasks
+   API in the Google project, and provide a refresh token with the scopes
+   `https://www.googleapis.com/auth/calendar.events` and `https://www.googleapis.com/auth/tasks`.
+   The dashboard reads events for the previous 30 and next 90 days and can create new Calendar events.
+   The Tasks view can add and complete Google Tasks. Chores remain available locally; use **Sync
+   chores** in the Google Tasks view to create missing Google Tasks for them. Linked chore checkoffs
+   update the matching Google Task. Use the Google Tasks view to complete standalone tasks.
+- **AI chat:** the Agents view uses Cloudflare Workers AI through the Worker's `AI` binding; no
+   provider API key is required. The default is `@cf/meta/llama-3.1-8b-instruct-fp8-fast`; override it
+   with `WORKERS_AI_MODEL`. Cloudflare's current Workers Free allowance is 10,000 Neurons per day
+   across Workers AI, with model-dependent consumption; calls fail after the allowance on the free
+   plan. Local `wrangler dev` uses a remote AI binding, so Wrangler must be authenticated to your
+   Cloudflare account. The transcript stays in the current browser tab and is not persisted by this
+   app. See [Workers AI pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/).
+- **Home Assistant:** provide an HTTPS URL reachable from Cloudflare and a Home Assistant long-lived
+   access token. Add Kasa devices through Home Assistant's TP-Link integration and Eufy cameras through
+   a compatible Eufy integration; camera snapshots appear for exposed `camera.*` entities, and
+   `switch.*` / `light.*` entities can be toggled. Device compatibility depends on the Eufy model and
+   Home Assistant integration. Never expose Home Assistant directly to the public internet without
+   HTTPS and strong access controls.
+- **Eufy without Home Assistant:** `dashboard/eufy-bridge/` is a local Node 24.5+ bridge using the
+   unofficial `@mega-yfue/eufy-sdk`. If `.env` does not exist, run `cp .env.example .env`; then set
+   your Eufy login and a random `EUFY_BRIDGE_TOKEN`, and run `npm install` and `npm start` from that
+   directory. First login
+   may prompt for CAPTCHA or two-factor verification; the session is stored locally. Copy the same
+   bridge token into `dashboard/.dev.vars` with `EUFY_BRIDGE_URL=http://127.0.0.1:8791`, then run the
+   dashboard Worker locally. The bridge listens on loopback by default and never sends account
+   credentials to the browser. Camera tiles use stored motion snapshots; opening a camera requests a
+   fresh snapshot and may wake a battery camera. Fresh snapshots need `ffmpeg` on the bridge host.
+   This is an unofficial integration and may break if Eufy changes its service. For a deployed
+   Cloudflare Worker, `127.0.0.1` is not your home network: expose the bridge to the Worker only via a
+   secured HTTPS tunnel and set `EUFY_BRIDGE_URL`/`EUFY_BRIDGE_TOKEN` as Worker secrets.
+- **Weather:** the dashboard requests current and hourly forecast data from
+   [Open-Meteo](https://open-meteo.com/). The selected default is Little Elm, TX 75068
+   (`33.16262, -96.93751`); override it with `WEATHER_LOCATION`, `WEATHER_LAT`, and `WEATHER_LON` in
+   `.dev.vars` if needed. It does not use browser geolocation. The clock uses the device's local time
+   and timezone.
+- **Photos:** put image files under `dashboard/public/photos/` and list them in
+   `dashboard/public/photos/manifest.json`. Only listed files are shown. That folder is git-ignored
+   except for the manifest, because family photos should not be committed. Export or sync photos from
+   Google Photos or Apple Photos into this folder yourself; Apple Photos integration is not connected
+   directly.
+
+For Cloudflare deployment, configure the same values as Worker secrets with `npx wrangler secret
+put NAME` from `dashboard/` before running `npm run deploy`. At minimum, set
+`DASHBOARD_ACCESS_KEY`; the other integrations need their corresponding values in `.dev.vars` or as
+Worker secrets. Stop either local server with `Ctrl+C`.
+
+Example photo manifest entry:
+
+```json
+{
+   "photos": [
+      { "src": "/photos/family-at-the-lake.jpg", "date": "2025-07-19", "place": "Lake", "o": "l" }
+   ]
+}
+```
 
 ## For agents: start here
 

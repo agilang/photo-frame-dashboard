@@ -193,7 +193,7 @@
     var isToday = V.mode === 'month' ? (V.date.getMonth() === App.now().getMonth()) : App.sameDay(V.date, App.now());
     return '<header class="cal-head">' +
       '<button class="icon-btn" data-nav="-1" aria-label="Previous">' + App.icon('left', 24) + '</button>' +
-      '<div class="cal-title"><div class="serif">' + t.t + '</div><div class="label">' + t.k + '</div></div>' +
+      '<div class="cal-title"><div class="serif">' + t.t + '</div><div class="label">' + t.k + '</div><div class="label cal-source">' + (window.DASHBOARD_INTEGRATIONS.status.calendar ? 'Google Calendar · synced' : 'Google not connected · local only') + '</div></div>' +
       '<button class="icon-btn" data-nav="1" aria-label="Next">' + App.icon('right', 24) + '</button>' +
       '<button class="btn btn--ghost' + (isToday ? ' is-hidden' : '') + '" data-today>Today</button>' +
       '<div class="seg">' + MODES.map(function (m) { return '<button class="' + (V.mode === m[0] ? 'is-on' : '') + '" data-mode="' + m[0] + '">' + m[1] + '</button>'; }).join('') + '</div>' +
@@ -232,7 +232,9 @@
       return render();
     }
     if ((t = e.target.closest('[data-day]'))) { V.mode = 'day'; V.date = new Date(+t.dataset.day); V.scroll = null; return render(); }
-    if ((t = e.target.closest('[data-add]'))) return addSheet();
+    if ((t = e.target.closest('[data-add]'))) {
+        return addSheet();
+    }
   }
 
   // Swipe left/right to change day (the only swipe gesture in the app)
@@ -328,6 +330,28 @@
             var start = App.addDays(App.dayStart(now), st.day), p = st.time.split(':');
             start.setHours(+p[0], +p[1]);
             var e = { id: D._eid(), title: title, people: who, start: start, end: new Date(+start + st.dur * 60000) };
+              if (window.DASHBOARD_INTEGRATIONS.status.calendar) {
+                t.disabled = true;
+                window.DASHBOARD_INTEGRATIONS.createEvent({
+                  title: title,
+                  start: e.start.toISOString(),
+                  end: e.end.toISOString()
+                }).then(function (result) {
+                  var saved = result.event;
+                  saved.start = new Date(saved.start);
+                  saved.end = new Date(saved.end);
+                  D.events.push(saved);
+                  close();
+                  V.date = App.dayStart(saved.start); V.mode = V.mode === 'month' ? 'day' : V.mode; V.scroll = null;
+                  render();
+                  App.emit('data');
+                  App.toast('Added <b>' + App.esc(title) + '</b> to Google Calendar', { icon: 'calendar' });
+                }).catch(function () {
+                  t.disabled = false;
+                  App.toast('Couldn’t save this event to Google Calendar', { tone: 'error', icon: 'calendar' });
+                });
+                return;
+              }
             D.events.push(e);
             close();
             V.date = App.dayStart(start); V.mode = V.mode === 'month' ? 'day' : V.mode; V.scroll = null;

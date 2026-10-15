@@ -2,3 +2,6 @@ node_modules
 dist
 .wrangler
 kiosk/build
+.dev.vars
+.dev.vars.*
+!.dev.vars.example

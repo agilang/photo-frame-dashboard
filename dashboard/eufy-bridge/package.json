@@ -1,0 +1,14 @@
+{
+  "name": "photo-frame-eufy-bridge",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.5.0"
+  },
+  "scripts": {
+    "start": "node --env-file=.env server.js"
+  },
+  "dependencies": {
+    "@mega-yfue/eufy-sdk": "^0.4.0"
+  }
+}

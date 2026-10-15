@@ -4,6 +4,7 @@
   var D = window.DATA;
 
   function src(p, big) {
+    if (p.src) return p.src;
     var w = p.o === 'p' ? 800 : 1600, h = p.o === 'p' ? 1200 : 1000;
     if (!big) { w = Math.round(w / 2); h = Math.round(h / 2); }
     return App.img(p.seed, w, h);
@@ -71,6 +72,8 @@
     this.count = 0;
     this.timer = null;
     this.current = null;
+    App.slideshows = App.slideshows || [];
+    App.slideshows.push(this);
   };
   var S = App.Slideshow.prototype;
 
@@ -156,4 +159,14 @@
   };
   S.start = function () { if (!this.current) this.next(); else this.restart(); };
   S.stop = function () { clearInterval(this.timer); this.timer = null; };
+
+  App.on('photos', function () {
+    (App.slideshows || []).forEach(function (show) {
+      var active = !!show.timer;
+      show.queue = [];
+      show.history = [];
+      show.current = null;
+      if (active) show.next();
+    });
+  });
 })();
