@@ -2,8 +2,94 @@
 (function () {
   'use strict';
   var D = window.DATA;
-  var V = { el: null, routine: null, pending: {}, source: 'chores' };
-  var LANES = ['alex', 'jordan', 'maya', 'otto', 'any'];
+  var V = { el: null, routine: null, pending: {}, source: 'chores', customChores: [] };
+  var LANES = D.people.map(function (person) { return person.id; }).concat(['any']);
+  var STORAGE_KEY = 'home-hq-custom-chores-v1';
+
+  function loadCustomChores() {
+    try {
+      var saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return;
+      var chores = JSON.parse(saved);
+      if (!Array.isArray(chores) || chores.some(function (chore) {
+        return !chore || typeof chore.id !== 'string' || typeof chore.title !== 'string' ||
+          !D.routines.some(function (r) { return r.id === chore.r; }) ||
+          LANES.indexOf(chore.who) === -1 || typeof chore.done !== 'boolean';
+      })) throw new Error('Saved chores are invalid');
+      V.customChores = chores;
+      Array.prototype.push.apply(D.chores, chores);
+    } catch (error) {
+      App.toast('Saved custom chores could not be loaded. Existing chores are unchanged.', { tone: 'error', icon: 'check' });
+    }
+  }
+
+  function saveCustomChores() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(V.customChores));
+      return true;
+    } catch (error) {
+      App.toast('Couldn’t save custom chore changes on this device.', { tone: 'error', icon: 'check' });
+      return false;
+    }
+  }
+
+  function addChore(defaultWho) {
+    defaultWho = defaultWho || 'any';
+    var routineId = routine().id;
+    var assigneeOptions = D.people.map(function (person) {
+      return '<option value="' + person.id + '"' + (defaultWho === person.id ? ' selected' : '') + '>' + App.esc(person.name) + '</option>';
+    }).join('') + '<option value="any"' + (defaultWho === 'any' ? ' selected' : '') + '>Anyone</option>';
+    var routineOptions = D.routines.map(function (item) {
+      return '<option value="' + item.id + '"' + (item.id === routineId ? ' selected' : '') + '>' + App.esc(item.name) + '</option>';
+    }).join('');
+    App.sheet('<div class="sheet-pad"><div class="label">Family chores</div><h2 class="serif sheet-h">Add a chore</h2>' +
+      '<label class="chore-field">What needs doing?<input class="big-input" maxlength="80" placeholder="e.g. Set the table" data-new-chore-title></label>' +
+      '<div class="chore-form-row"><label class="chore-field">Assign to<select class="big-input" data-new-chore-who>' + assigneeOptions + '</select></label>' +
+      '<label class="chore-field">Routine<select class="big-input" data-new-chore-routine>' + routineOptions + '</select></label></div>' +
+      '<label class="chore-field chore-stars-field">Reward stars<input class="big-input" type="number" min="0" max="10" value="0" data-new-chore-stars></label>' +
+      '<div class="sheet-actions"><button class="btn btn--ghost" data-close>Cancel</button><button class="btn btn--solid" data-save-chore>Add chore</button></div></div>', {
+      onMount: function (sheet, close) {
+        var title = sheet.querySelector('[data-new-chore-title]');
+        title.focus();
+        sheet.addEventListener('click', function (event) {
+          var button = event.target.closest('[data-save-chore]');
+          if (!button) return;
+          var cleanTitle = title.value.trim();
+          var starsInput = sheet.querySelector('[data-new-chore-stars]');
+          var stars = Number(starsInput.value);
+          if (!cleanTitle) { title.focus(); return; }
+          if (!Number.isInteger(stars) || stars < 0 || stars > 10) { starsInput.focus(); return; }
+          var chore = {
+            id: 'custom-' + Date.now() + '-' + (V.customChores.length + 1),
+            r: sheet.querySelector('[data-new-chore-routine]').value,
+            who: sheet.querySelector('[data-new-chore-who]').value,
+            title: cleanTitle,
+            emoji: '✓',
+            stars: stars,
+            done: false
+          };
+          if (!D.routines.some(function (item) { return item.id === chore.r; }) || LANES.indexOf(chore.who) === -1) {
+            App.toast('Choose a valid assignee and routine.', { tone: 'error', icon: 'check' });
+            return;
+          }
+          var next = V.customChores.concat([chore]);
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+          } catch (error) {
+            App.toast('Couldn’t save this chore on this device.', { tone: 'error', icon: 'check' });
+            return;
+          }
+          V.customChores = next;
+          D.chores.push(chore);
+          V.routine = chore.r;
+          close();
+          render();
+          App.emit('data');
+          App.toast('Added <b>' + App.esc(chore.title) + '</b> for ' + App.esc(chore.who === 'any' ? 'Anyone' : App.person(chore.who).name), { icon: 'check' });
+        });
+      }
+    });
+  }
 
   function routine() { return V.routine ? D.routines.filter(function (r) { return r.id === V.routine; })[0] : App.currentRoutine(); }
   function listFor(who, r) {
@@ -41,6 +127,7 @@
       '<div><b>' + (who === 'any' ? 'Anyone' : p.name) + '</b>' +
       (kid ? '<span class="ch-stars">' + App.icon('star', 18, 'i--fill') + '<span class="num">' + D.stars[who] + '</span></span>' : '<span class="ch-sub">' + (who === 'any' ? 'Up for grabs' : (list.length ? done + ' of ' + list.length : 'Nothing')) + '</span>') + '</div>' +
       '<div class="ch-ring">' + App.ring(done, list.length || 1, 46) + '<span class="num">' + (all ? '✓' : list.length ? done + '/' + list.length : '–') + '</span></div>' +
+      '<button class="ch-add" data-add-chore="' + who + '" aria-label="Add chore for ' + App.esc(who === 'any' ? 'Anyone' : p.name) + '">+</button>' +
       '</header>' +
       '<div class="ch-list">' + (list.length ? list.map(function (c) { return row(c, p); }).join('') : '<div class="ch-none serif"><i>Nothing this ' + (r.id === 'evening' ? 'evening' : r.id === 'morning' ? 'morning' : 'afternoon') + '</i></div>') +
       (all ? '<div class="ch-alldone serif">All done<i>!</i></div>' : '') + '</div>' +
@@ -115,7 +202,8 @@
     var done = inR.filter(function (c) { return c.done; }).length;
     V.el.innerHTML = '<div class="tasks">' +
       '<header class="t-head">' +
-      '<div class="t-title"><div class="label">' + (google ? 'Google Tasks · online' : window.DASHBOARD_INTEGRATIONS.status.tasks ? 'Chores · Google connected' : 'Chores · Google not connected') + '</div><h1 class="serif">' + (google ? 'Tasks' : r.name) + '</h1></div>' +
+      '<div class="t-title"><div class="label">' + (google ? 'Google Tasks · online' : window.DASHBOARD_INTEGRATIONS.status.tasks ? 'Chores · Google connected' : 'Local · saved on this device') + '</div><h1 class="serif">' + (google ? 'Tasks' : r.name) + '</h1></div>' +
+      (!google ? '<button class="btn btn--solid t-add" data-add-chore aria-label="Add a chore">' + App.icon('plus', 20) + 'Add chore</button>' : '') +
       (window.DASHBOARD_INTEGRATIONS.status.tasks ? '<div class="seg"><button class="' + (!google ? 'is-on' : '') + '" data-source="chores">Chores</button><button class="' + (google ? 'is-on' : '') + '" data-source="google">Google Tasks</button></div>' : '') +
       (google ? '<div class="seg"><button data-add-google-task>Add task</button><button data-sync-chores>Sync chores</button></div>' : '') +
       (!google ? '<div class="seg">' + D.routines.map(function (x) { return '<button class="' + (x.id === r.id ? 'is-on' : '') + '" data-r="' + x.id + '">' + x.name + '</button>'; }).join('') + '</div>' +
@@ -134,6 +222,7 @@
       delete V.pending[c.id];
       c.done = true;
       if (by) c.doneBy = by;
+      if (c.id.indexOf('custom-') === 0) saveCustomChores();
       var earner = D.stars[c.who] != null ? c.who : (by && D.stars[by] != null ? by : null);
       if (earner && c.stars) D.stars[earner] += c.stars;
       render();
@@ -151,6 +240,7 @@
           function undoLocal() {
             c.done = false;
             delete c.doneBy;
+            if (c.id.indexOf('custom-') === 0) saveCustomChores();
             if (earner && c.stars) D.stars[earner] -= c.stars;
             render();
             App.emit('data');
@@ -193,6 +283,7 @@
   function onClick(e) {
     var t;
     if ((t = e.target.closest('[data-add-google-task]'))) return addGoogleTask();
+    if ((t = e.target.closest('[data-add-chore]'))) return addChore(t.dataset.addChore);
     if ((t = e.target.closest('[data-sync-chores]'))) return confirmChoreSync();
     if ((t = e.target.closest('[data-google-task]'))) {
       var task = window.DASHBOARD_INTEGRATIONS.tasks.filter(function (item) {
@@ -220,6 +311,7 @@
             var earner = D.stars[c.who] != null ? c.who : (c.doneBy && D.stars[c.doneBy] != null ? c.doneBy : null);
             if (earner && c.stars) D.stars[earner] -= c.stars;
             delete c.doneBy;
+            if (c.id.indexOf('custom-') === 0) saveCustomChores();
             delete V.pending[c.id];
             render();
             App.emit('data');
@@ -234,6 +326,7 @@
         var earner = D.stars[c.who] != null ? c.who : (c.doneBy && D.stars[c.doneBy] != null ? c.doneBy : null);
         if (earner && c.stars) D.stars[earner] -= c.stars;
         delete c.doneBy;
+        if (c.id.indexOf('custom-') === 0) saveCustomChores();
         render();
         App.emit('data');
         return;
@@ -245,7 +338,7 @@
 
   App.register('tasks', {
     show: function (el) {
-      if (!V.el) { V.el = el; el.addEventListener('click', onClick); }
+      if (!V.el) { V.el = el; loadCustomChores(); el.addEventListener('click', onClick); }
       render();
     }
   });

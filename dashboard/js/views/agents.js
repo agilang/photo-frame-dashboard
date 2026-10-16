@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var D = window.DATA;
-  var V = { el: null, loaded: Date.now(), synced: Date.now() - 2 * 60000, view: 'usage', chat: [], sending: false };
+  var V = { el: null, loaded: Date.now(), synced: Date.now() - 2 * 60000, view: 'ai', chat: [], sending: false };
 
   function pstyle(a) { return '--c:' + a.color + ';--c-rgb:' + a.rgb; }
   function minsLeft(m) { return Math.max(0, m.left - (Date.now() - V.loaded) / 60000); }
@@ -104,8 +104,10 @@
     var messages = V.chat.map(function (message) {
       return '<article class="ag-chat-message ag-chat-message--' + message.role + '"><span class="label">' + (message.role === 'user' ? 'You' : 'Assistant') + '</span><p>' + App.esc(message.content) + '</p></article>';
     }).join('');
-    var empty = V.chat.length ? '' : '<div class="ag-chat-empty"><span class="label">Cloudflare Workers AI</span><h2 class="serif">What can I help with?</h2><p>Ask a question. This conversation stays in this browser tab.</p></div>';
-    var notice = configured ? '' : '<p class="ag-chat-notice">Workers AI requires an AI binding and a Wrangler session authenticated with Cloudflare.</p>';
+    var empty = V.chat.length ? '' : '<div class="ag-chat-empty"><span class="label">Family assistant · Cloudflare Workers AI</span><h2 class="serif">What can I help with?</h2>' +
+      '<p>Use this for general questions and planning ideas. It cannot currently see your calendar, chores, photos, or cameras.</p>' +
+      '<div class="ag-prompts"><button data-prompt="Suggest a simple weeknight dinner using rice and dal">Dinner idea</button><button data-prompt="Help me make a calm after-school routine for two children">After-school routine</button><button data-prompt="Give me a 15-minute family tidy-up plan">Quick tidy-up plan</button></div></div>';
+    var notice = configured ? '' : '<p class="ag-chat-notice">Chat is unavailable until the Cloudflare Workers AI binding is configured and the app is deployed or run with Wrangler.</p>';
     return '<section class="ag-chat"><div class="ag-chat-log" role="log" aria-live="polite">' + empty + messages +
       (V.sending ? '<article class="ag-chat-message ag-chat-message--assistant"><span class="label">Assistant</span><p>Thinking…</p></article>' : '') + '</div>' + notice +
       '<form class="ag-chat-form" data-ai-form><textarea data-ai-input maxlength="4000" rows="2" placeholder="Message the assistant" aria-label="Message the assistant"' + (!configured || V.sending ? ' disabled' : '') + '></textarea>' +
@@ -116,8 +118,8 @@
 
   function render() {
     V.el.innerHTML = '<div class="agents">' +
-      '<header class="ag-top"><div><div class="label">AI plans · usage limits</div><h1 class="serif">Agents</h1></div>' +
-      '<div class="ag-sync"><div class="seg"><button class="' + (V.view === 'usage' ? 'is-on' : '') + '" data-agent-view="usage">Usage</button><button class="' + (V.view === 'ai' ? 'is-on' : '') + '" data-agent-view="ai">AI Chat</button></div>' +
+      '<header class="ag-top"><div><div class="label">' + (V.view === 'ai' ? 'General help and ideas · no household data access' : 'Sample usage metrics · not live provider data') + '</div><h1 class="serif">' + (V.view === 'ai' ? 'Assistant' : 'Usage') + '</h1></div>' +
+      '<div class="ag-sync"><div class="seg"><button class="' + (V.view === 'ai' ? 'is-on' : '') + '" data-agent-view="ai">Chat</button><button class="' + (V.view === 'usage' ? 'is-on' : '') + '" data-agent-view="usage">Usage</button></div>' +
       (V.view === 'usage' ? '<span class="label">' + synced() + '</span><button class="icon-btn" data-refresh aria-label="Refresh">' + App.icon('undo', 26) + '</button>' : '') + '</div></header>' +
       (V.view === 'ai' ? aiChat() : '<div class="ag-grid">' + D.agents.map(card).join('') + summary() + '</div>') +
       '</div>';
@@ -156,6 +158,15 @@
         el.addEventListener('click', function (e) {
           var view = e.target.closest('[data-agent-view]');
           if (view) { V.view = view.dataset.agentView; return render(); }
+          var prompt = e.target.closest('[data-prompt]');
+          if (prompt) {
+            var input = V.el.querySelector('[data-ai-input]');
+            if (input && !input.disabled) {
+              input.value = prompt.dataset.prompt;
+              input.focus();
+            }
+            return;
+          }
           if (e.target.closest('[data-clear-chat]')) { V.chat = []; return render(); }
           var b = e.target.closest('[data-refresh]');
           if (!b) return;

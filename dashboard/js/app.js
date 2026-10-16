@@ -123,7 +123,7 @@
     return D.routines[2];
   };
   App.weatherNow = function () {
-    var W = D.weather, h = App.now().getHours();
+    var W = D.weather, h = App.weatherHour();
     var rainAt = -1;
     for (var i = h; i < 24; i++) if (W.p[i] >= 50) { rainAt = i; break; }
     var summary, advice;
@@ -143,12 +143,29 @@
     return { temp: W.t[h], cond: W.c[h], label: labels[W.c[h]], hi: W.hi, lo: W.lo, location: W.location, summary: summary, advice: advice, hour: h };
   };
   App.hourly = function (count) {
-    var W = D.weather, h = App.now().getHours(), out = [];
+    var W = D.weather, h = App.weatherHour(), out = [];
     for (var i = 0; i < count; i++) {
       var x = (h + i) % 24;
       out.push({ h: x, t: W.t[x], c: W.c[x], p: W.p[x], label: i === 0 ? 'Now' : ((x % 12 || 12) + (x >= 12 ? 'p' : 'a')) });
     }
     return out;
+  };
+  App.weatherHour = function () {
+    var timezone = D.weather.timezone;
+    if (timezone && typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
+      try {
+        var parts = new Intl.DateTimeFormat('en-US', {
+          timeZone: timezone,
+          hour: 'numeric',
+          hourCycle: 'h23'
+        }).formatToParts(App.now());
+        var hour = Number(parts.filter(function (part) { return part.type === 'hour'; })[0].value);
+        if (Number.isInteger(hour) && hour >= 0 && hour <= 23) return hour;
+      } catch (error) {
+        // Invalid configured time zones fall back to the frame's local clock.
+      }
+    }
+    return App.now().getHours();
   };
 
   // ------------------------------------------------------------ router

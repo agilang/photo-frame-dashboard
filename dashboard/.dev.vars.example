@@ -3,10 +3,13 @@ GOOGLE_CLIENT_ID=your-google-oauth-client-id
 GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
 GOOGLE_REFRESH_TOKEN=your-google-refresh-token
 WORKERS_AI_MODEL=@cf/meta/llama-3.1-8b-instruct-fp8-fast
+FINNHUB_API_KEY=your-finnhub-api-key
 HOME_ASSISTANT_URL=https://your-home-assistant-host
 HOME_ASSISTANT_TOKEN=your-home-assistant-token
-EUFY_BRIDGE_URL=http://127.0.0.1:8791
-EUFY_BRIDGE_TOKEN=use-the-same-random-token-as-eufy-bridge-env
+# Set to the Mac's home-LAN IP for the local Worker and the photo-frame browser.
+EUFY_LIVE_BRIDGE_URL=http://192.168.1.10:8791
+EUFY_LIVE_BRIDGE_BROWSER_URL=http://192.168.1.10:8791
+EUFY_GO2RTC_BROWSER_URL=http://192.168.1.10:1984
 WEATHER_LOCATION=Little Elm, TX 75068
 WEATHER_LAT=33.16262
 WEATHER_LON=-96.93751

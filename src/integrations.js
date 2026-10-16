@@ -277,7 +277,7 @@ async function homeAssistantCamera(request, env) {
   });
 }
 
-async function eufyBridge(request, env, url) {
+async function legacyEufyBridge(request, env, url) {
   if (!env.EUFY_BRIDGE_URL || !env.EUFY_BRIDGE_TOKEN) {
     throw new Error("Eufy local bridge is not configured");
   }
@@ -304,22 +304,119 @@ async function eufyBridge(request, env, url) {
   });
 }
 
-async function weather(env) {
-  const latitude = Number(env.WEATHER_LAT || "33.16262");
-  const longitude = Number(env.WEATHER_LON || "-96.93751");
-  const location = env.WEATHER_LOCATION || "Little Elm, TX 75068";
+function eufyBridgeConfig(env) {
+  const bridgeUrl = env.EUFY_LIVE_BRIDGE_BROWSER_URL;
+  const go2rtcUrl = env.EUFY_GO2RTC_BROWSER_URL;
+  if (!bridgeUrl || !go2rtcUrl) throw new Error("Eufy live bridge browser URLs are not configured");
+  const parseUrl = (value) => {
+    const parsed = new URL(value);
+    if (!["http:", "https:"].includes(parsed.protocol) || parsed.username || parsed.password) {
+      throw new Error("Eufy bridge URLs must be HTTP(S) URLs without embedded credentials");
+    }
+    return parsed.origin;
+  };
+  return json({ bridgeUrl: parseUrl(bridgeUrl), go2rtcUrl: parseUrl(go2rtcUrl) });
+}
+
+async function eufyLiveBridge(request, env, url) {
+  if (url.pathname === "/api/eufy/config" && request.method === "GET") {
+    return eufyBridgeConfig(env);
+  }
+  const match = /^\/api\/eufy\/cameras\/([A-Za-z0-9_-]{1,64})\/snapshot$/.exec(url.pathname);
+  if (!match || request.method !== "GET") return failure("Not found", 404);
+  if (!env.EUFY_LIVE_BRIDGE_URL) throw new Error("Eufy live bridge URL is not configured");
+
+  const base = new URL(env.EUFY_LIVE_BRIDGE_URL);
+  if (!["http:", "https:"].includes(base.protocol) || base.username || base.password) {
+    throw new Error("Eufy live bridge URL must be HTTP(S) without embedded credentials");
+  }
+  const mode = url.searchParams.get("mode") || "auto";
+  if (!["auto", "live", "stored"].includes(mode)) return failure("Invalid snapshot mode", 400);
+  const upstreamUrl = new URL(`/snapshot/${encodeURIComponent(match[1])}`, base);
+  upstreamUrl.searchParams.set("mode", mode);
+  const response = await fetch(upstreamUrl);
+  return new Response(response.body, {
+    status: response.status,
+    headers: {
+      "Content-Type": response.headers.get("Content-Type") || "application/json; charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
+}
+
+async function weather(env, url) {
+  const hasLatitude = url.searchParams.has("latitude");
+  const hasLongitude = url.searchParams.has("longitude");
+  if (hasLatitude !== hasLongitude) return failure("Latitude and longitude must be provided together", 400);
+  const latitude = hasLatitude ? Number(url.searchParams.get("latitude")) : Number(env.WEATHER_LAT || "33.16262");
+  const longitude = hasLongitude ? Number(url.searchParams.get("longitude")) : Number(env.WEATHER_LON || "-96.93751");
+  const location = (url.searchParams.get("location") || env.WEATHER_LOCATION || "Little Elm, TX 75068").trim();
+  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 ||
+      !Number.isFinite(longitude) || longitude < -180 || longitude > 180 ||
+      !location || location.length > 100) {
+    return failure("Invalid weather location", 400);
+  }
   const query = new URLSearchParams({
     latitude: String(latitude),
     longitude: String(longitude),
     current: "temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m",
     hourly: "temperature_2m,precipitation_probability,weather_code",
-    daily: "temperature_2m_max,temperature_2m_min",
-    forecast_days: "2",
+    daily: "temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max",
+    forecast_days: "7",
     timezone: "auto",
   });
   const response = await fetch(`https://api.open-meteo.com/v1/forecast?${query}`);
   if (!response.ok) throw new Error("Weather request failed");
   return json({ ...(await response.json()), location });
+}
+
+async function weatherGeocode(url) {
+  const name = (url.searchParams.get("q") || "").trim();
+  if (name.length < 2 || name.length > 100) return failure("Enter a city name between 2 and 100 characters", 400);
+  const query = new URLSearchParams({ name, count: "8", language: "en", format: "json" });
+  const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?${query}`);
+  if (!response.ok) throw new Error("City search failed");
+  const data = await response.json();
+  return json({
+    results: (data.results || []).map((place) => ({
+      name: place.name,
+      admin1: place.admin1 || "",
+      country: place.country || "",
+      latitude: place.latitude,
+      longitude: place.longitude,
+    })),
+  });
+}
+
+async function stockQuote(url, env) {
+  const symbol = (url.searchParams.get("symbol") || "").trim().toUpperCase();
+  if (!/^[A-Z][A-Z0-9.-]{0,9}$/.test(symbol)) return failure("Enter a valid stock symbol", 400);
+  if (!env.FINNHUB_API_KEY) return failure("Finnhub is not configured", 503);
+  const query = new URLSearchParams({ symbol, token: env.FINNHUB_API_KEY });
+  const response = await fetch(`https://finnhub.io/api/v1/quote?${query}`);
+  if (response.status === 401 || response.status === 403) return failure("Finnhub rejected its API key", 502);
+  if (response.status === 429) return failure("Finnhub rate limit reached; try again later", 429);
+  if (!response.ok) return failure("Finnhub quote request failed", 502);
+  let quote;
+  try {
+    quote = await response.json();
+  } catch {
+    return failure("Finnhub returned invalid quote data", 502);
+  }
+  if (!quote || !Number.isFinite(quote.c) || quote.c <= 0 || !Number.isFinite(quote.t) || quote.t <= 0) {
+    return failure("No current quote is available for this symbol", 404);
+  }
+  return json({
+    symbol,
+    price: quote.c,
+    change: Number.isFinite(quote.d) ? quote.d : null,
+    percentChange: Number.isFinite(quote.dp) ? quote.dp : null,
+    high: Number.isFinite(quote.h) ? quote.h : null,
+    low: Number.isFinite(quote.l) ? quote.l : null,
+    previousClose: Number.isFinite(quote.pc) ? quote.pc : null,
+    timestamp: quote.t,
+  });
 }
 
 const DEFAULT_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8-fast";
@@ -374,8 +471,13 @@ export async function handleIntegrationApi(request, env, url) {
     if (url.pathname === "/api/home-assistant/states" && request.method === "GET") return await homeAssistantStates(env);
     if (url.pathname === "/api/home-assistant/service" && request.method === "POST") return await homeAssistantService(request, env);
     if (url.pathname === "/api/home-assistant/camera" && request.method === "GET") return await homeAssistantCamera(request, env);
-    if (url.pathname.startsWith("/api/eufy/")) return await eufyBridge(request, env, url);
-    if (url.pathname === "/api/weather" && request.method === "GET") return await weather(env);
+    if (url.pathname.startsWith("/api/eufy/")) return await eufyLiveBridge(request, env, url);
+    if (url.pathname === "/api/weather" && request.method === "GET") return await weather(env, url);
+    if (url.pathname === "/api/weather/geocode" && request.method === "GET") return await weatherGeocode(url);
+    if (url.pathname === "/api/stocks/status" && request.method === "GET") {
+      return json({ configured: !!env.FINNHUB_API_KEY, provider: "Finnhub" });
+    }
+    if (url.pathname === "/api/stocks/quote" && request.method === "GET") return await stockQuote(url, env);
     if (url.pathname === "/api/ai/status" && request.method === "GET") return await workersAiStatus(env);
     if (url.pathname === "/api/ai/chat" && request.method === "POST") return await workersAiChat(request, env);
     return failure("Not found", 404);

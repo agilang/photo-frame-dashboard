@@ -96,13 +96,17 @@ async function handle(request, response) {
     const bound = await client.getDevice(device.serial);
     const camera = bound.camera?.();
     if (!camera) return sendJson(response, 404, { error: "Camera capability unavailable" });
+    const live = url.searchParams.get("live") === "1";
     let jpeg;
-    if (url.searchParams.get("live") === "1") {
+    if (live) {
       jpeg = (await camera.snapshotLive?.())?.jpeg;
     } else {
       jpeg = await camera.snapshotStored?.();
     }
-    if (!jpeg) return sendJson(response, 404, { error: "No snapshot available" });
+    if (!jpeg) {
+      if (live) console.warn(`Eufy live capture returned no image for ${device.name}`);
+      return sendJson(response, 404, { error: live ? "Live capture returned no image" : "No snapshot available" });
+    }
     response.writeHead(200, {
       "Content-Type": "image/jpeg",
       "Cache-Control": "no-store",
@@ -113,6 +117,8 @@ async function handle(request, response) {
     if (error instanceof StoredSnapshotUnavailableError) {
       return sendJson(response, 404, { error: "No stored motion snapshot available" });
     }
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Eufy ${url.searchParams.get("live") === "1" ? "live" : "stored"} snapshot failed for ${device.name}: ${message}`);
     sendJson(response, 503, { error: "Camera snapshot unavailable" });
   }
 }
