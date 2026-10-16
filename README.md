@@ -68,9 +68,9 @@ Settings → About before you follow any guide:
 Cloudflare Workers, with demo-data fallback and optional Google and Home Assistant integrations.
 The current dashboard includes a modern Today screen, an editable calendar, locally saved chores
 and shopping lists, a family photo slideshow, camera controls, an AI chat assistant, interactive
-hourly and 7-day weather, and a personal stock watchlist. Google Calendar/Tasks, Home Assistant,
-live Eufy video, Workers AI, and Finnhub quotes are optional integrations; each requires its own
-configuration described below.
+hourly and 7-day weather, a personal stock watchlist, an optional YouTube/Spotify music player,
+and a low-glare night dashboard. Google Calendar/Tasks, Home Assistant, live Eufy video, Workers AI,
+and Finnhub quotes are optional integrations; each requires its own configuration described below.
 `dashboard/kiosk/` is a small full-screen WebView Android app,
 built without Gradle, that shows it. Hold two fingers still for 1.5 s to open a menu for the
 launcher, Android settings, and reloading. On frames without system navigation, optional floating
@@ -159,6 +159,15 @@ commit them.
    directly. The built-in starter slideshow uses sample online images until you add your own photos.
    For privacy, review the sample-image provider's terms before using the starter slideshow in a
    public deployment.
+- **Music:** open **Music** and paste an HTTPS YouTube video or playlist URL, or a Spotify track,
+   album, playlist, artist, or show URL. The player embeds the provider's own controls; no API key or
+   subscription integration is needed, and the URL is saved only in that browser. Playback is not
+   automatic. Free playback, ads, sign-in requirements, and content availability are controlled by
+   YouTube or Spotify and can vary by content and region. Some Android WebViews may need network
+   access and third-party cookies enabled for provider embeds.
+- **Night display:** the dim dashboard palette is applied when night dashboard mode is selected.
+   It uses dark slate surfaces and softened teal highlights without inverting the colors of photos
+   or camera video. The separate night clock remains available for a darker, glanceable screen.
 
 For Cloudflare deployment, configure the same values as Worker secrets with `npx wrangler secret
 put NAME` from `dashboard/` before running `npm run deploy`. At minimum, set
@@ -289,6 +298,9 @@ trusting it, and remember that a past approval is not permission for a new write
 - [ha-eufy-sdk-bridge](https://github.com/mega-yfue/ha-eufy-sdk-bridge) and
   [go2rtc](https://github.com/AlexxIT/go2rtc) enable optional local-network Eufy camera playback.
 - [Manrope](https://fonts.google.com/specimen/Manrope) is loaded from Google Fonts.
+- The optional music screen embeds media using the official [YouTube](https://www.youtube.com/)
+  and [Spotify](https://open.spotify.com/) players. Playback and account restrictions are set by
+  those providers.
 - The starter slideshow uses sample images from [Picsum Photos](https://picsum.photos/). Add your own
   images for a private family slideshow; see the [photo setup](#live-services).
 
