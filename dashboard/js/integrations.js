@@ -1,10 +1,50 @@
 (function () {
   'use strict';
   var D = window.DATA;
-  var state = { calendar: false, tasks: false, homeAssistant: false, eufy: false, weather: false, photos: false, workersAi: false };
+  var state = { calendar: false, tasks: false, homeAssistant: false, eufy: false, weather: false, photos: false, workersAi: false, stocks: false };
+  var WEATHER_SETTINGS_KEY = 'home-hq-weather-settings-v1';
+  var weatherSettings = { unit: 'F', cities: [], activeCity: 0 };
+  var weatherSettingsError = '';
+  try {
+    var savedWeatherSettings = localStorage.getItem(WEATHER_SETTINGS_KEY);
+    if (savedWeatherSettings) {
+      var parsedWeatherSettings = JSON.parse(savedWeatherSettings);
+      if (!parsedWeatherSettings || !['C', 'F'].includes(parsedWeatherSettings.unit) ||
+          !Array.isArray(parsedWeatherSettings.cities) ||
+          !Number.isInteger(parsedWeatherSettings.activeCity) ||
+          parsedWeatherSettings.activeCity < 0 ||
+          parsedWeatherSettings.activeCity >= Math.max(1, parsedWeatherSettings.cities.length) ||
+          parsedWeatherSettings.cities.some(function (city) {
+            return !city || typeof city.name !== 'string' ||
+              !Number.isFinite(city.latitude) || city.latitude < -90 || city.latitude > 90 ||
+              !Number.isFinite(city.longitude) || city.longitude < -180 || city.longitude > 180;
+          })) throw new Error('Saved weather settings are invalid');
+      weatherSettings = parsedWeatherSettings;
+    }
+  } catch (error) {
+    weatherSettingsError = 'Saved weather settings could not be loaded. Changes have not been applied.';
+  }
+
+  function saveWeatherSettings(next) {
+    try {
+      localStorage.setItem(WEATHER_SETTINGS_KEY, JSON.stringify(next));
+      weatherSettings = next;
+      weatherSettingsError = '';
+      return true;
+    } catch (error) {
+      weatherSettingsError = 'Weather preferences could not be saved on this device.';
+      return false;
+    }
+  }
+
   var api = window.DASHBOARD_INTEGRATIONS = {
     status: state,
     tasks: [],
+    weatherSettings: weatherSettings,
+    weatherSettingsError: weatherSettingsError,
+    weatherError: '',
+    eufyConfig: null,
+    eufyError: '',
     aiModel: '@cf/meta/llama-3.1-8b-instruct-fp8-fast',
     url: function (path) {
       var url = new URL(path, window.location.href);
@@ -64,14 +104,112 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: messages })
       });
+    },
+    temperature: function (celsius) {
+      return weatherSettings.unit === 'F' ? Math.round(celsius * 9 / 5 + 32) : Math.round(celsius);
+    },
+    setWeatherUnit: function (unit) {
+      if (!['C', 'F'].includes(unit)) return Promise.reject(new Error('Choose Celsius or Fahrenheit'));
+      var next = Object.assign({}, weatherSettings, { unit: unit });
+      if (!saveWeatherSettings(next)) return Promise.reject(new Error(weatherSettingsError));
+      api.weatherSettings = weatherSettings;
+      api.weatherSettingsError = '';
+      changed();
+      return Promise.resolve();
+    },
+    searchWeatherCities: function (name) {
+      var query = (name || '').trim();
+      if (query.length < 2 || query.length > 100) return Promise.reject(new Error('Enter a city name between 2 and 100 characters'));
+      return request('/api/weather/geocode?q=' + encodeURIComponent(query)).then(function (result) {
+        return (result.results || []).filter(function (place) {
+          return typeof place.name === 'string' && Number.isFinite(place.latitude) && Number.isFinite(place.longitude);
+        }).map(function (place) {
+          return {
+            name: [place.name, place.admin1, place.country].filter(Boolean).join(', '),
+            latitude: place.latitude,
+            longitude: place.longitude
+          };
+        });
+      });
+    },
+    addWeatherCity: function (place) {
+      if (!place || typeof place.name !== 'string' || !Number.isFinite(place.latitude) ||
+          place.latitude < -90 || place.latitude > 90 ||
+          !Number.isFinite(place.longitude) || place.longitude < -180 || place.longitude > 180) {
+        return Promise.reject(new Error('Choose a valid city from the search results'));
+      }
+      var city = { name: place.name.slice(0, 100), latitude: place.latitude, longitude: place.longitude };
+      if (weatherSettings.cities.some(function (item) {
+        return Math.abs(item.latitude - city.latitude) < .01 && Math.abs(item.longitude - city.longitude) < .01;
+      })) return Promise.reject(new Error('That city is already in your list'));
+      if (weatherSettings.cities.length >= 8) return Promise.reject(new Error('You can save up to 8 cities'));
+      var next = Object.assign({}, weatherSettings, { cities: weatherSettings.cities.concat([city]) });
+      if (!saveWeatherSettings(next)) return Promise.reject(new Error(weatherSettingsError));
+      api.weatherSettings = weatherSettings;
+      api.weatherSettingsError = '';
+      if (next.cities.length === 1) return api.selectWeatherCity(0).then(function () { return city; });
+      changed();
+      return Promise.resolve(city);
+    },
+    selectWeatherCity: function (index) {
+      if (!Number.isInteger(index) || index < 0 || index >= weatherSettings.cities.length) {
+        return Promise.reject(new Error('Choose a city from your saved list'));
+      }
+      var next = Object.assign({}, weatherSettings, { activeCity: index });
+      if (!saveWeatherSettings(next)) return Promise.reject(new Error(weatherSettingsError));
+      api.weatherSettings = weatherSettings;
+      api.weatherSettingsError = '';
+      return syncWeather(weatherSettings.cities[index]);
+    },
+    removeWeatherCity: function (index) {
+      if (!Number.isInteger(index) || index < 0 || index >= weatherSettings.cities.length) {
+        return Promise.reject(new Error('Choose a city from your saved list'));
+      }
+      if (weatherSettings.cities.length === 1) return Promise.reject(new Error('Keep at least one saved city'));
+      var cities = weatherSettings.cities.filter(function (_, cityIndex) { return cityIndex !== index; });
+      var activeCity = weatherSettings.activeCity;
+      if (!cities.length) activeCity = 0;
+      else if (index < activeCity) activeCity--;
+      else if (index === activeCity) activeCity = Math.min(index, cities.length - 1);
+      var next = Object.assign({}, weatherSettings, { cities: cities, activeCity: activeCity });
+      if (!saveWeatherSettings(next)) return Promise.reject(new Error(weatherSettingsError));
+      api.weatherSettings = weatherSettings;
+      api.weatherSettingsError = '';
+      return cities.length ? syncWeather(cities[activeCity]) : syncWeather();
+    },
+    stockStatus: function () { return request('/api/stocks/status'); },
+    stockQuote: function (symbol) {
+      return request('/api/stocks/quote?symbol=' + encodeURIComponent(symbol));
+    },
+    eufyVideoUrl: function (cameraId) {
+      if (!api.eufyConfig) return '';
+      var url = new URL('/stream.html', api.eufyConfig.go2rtcUrl);
+      url.searchParams.set('src', cameraId);
+      url.searchParams.set('mode', 'webrtc');
+      return url.href;
     }
   };
 
   function request(path, options) {
     return fetch(api.url(path), options).then(function (response) {
-      if (!response.ok) throw new Error('Integration request failed');
+      if (!response.ok) {
+        return response.json().then(function (body) {
+          throw new Error(body && typeof body.error === 'string' ? body.error : 'Integration request failed');
+        }).catch(function (error) {
+          if (error instanceof Error && error.message !== 'Unexpected end of JSON input') throw error;
+          throw new Error('Integration request failed');
+        });
+      }
+      var contentType = response.headers.get('content-type') || '';
+      if (!contentType.toLowerCase().includes('application/json')) {
+        throw new Error('Dashboard API is unavailable. Start the Worker with `npx wrangler dev` from dashboard/.');
+      }
       return response;
-    }).then(function (response) { return response.json(); });
+    }).then(function (response) {
+      return response.json().catch(function () {
+        throw new Error('Dashboard API returned invalid JSON');
+      });
+    });
   }
 
   function changed() {
@@ -136,13 +274,67 @@
   }
 
   function syncEufyCameras() {
-    return request('/api/eufy/cameras').then(function (result) {
-      D.eufyCameras = (result.cameras || []).map(function (camera) {
-        return { id: camera.id, name: camera.name, source: 'eufy' };
+    return request('/api/eufy/config').then(function (config) {
+      api.eufyConfig = config;
+      return new Promise(function (resolve, reject) {
+        var socketUrl = new URL('/ws', config.bridgeUrl);
+        socketUrl.protocol = socketUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+        var socket = new WebSocket(socketUrl.href);
+        var timeout = setTimeout(function () {
+          socket.close();
+          reject(new Error('Timed out connecting to the Eufy video bridge'));
+        }, 10000);
+        socket.onmessage = function (event) {
+          var message;
+          try {
+            message = JSON.parse(event.data);
+          } catch {
+            clearTimeout(timeout);
+            socket.close();
+            reject(new Error('The Eufy bridge sent invalid JSON'));
+            return;
+          }
+          if (message.event === 'hello') {
+            if (!message.auth || message.auth.state !== 'ok') {
+              clearTimeout(timeout);
+              socket.close();
+              reject(new Error('The Eufy video bridge is not authenticated'));
+              return;
+            }
+            socket.send(JSON.stringify({ id: 1, cmd: 'devices.list' }));
+            return;
+          }
+          if (message.id !== 1) return;
+          clearTimeout(timeout);
+          socket.close();
+          if (!message.ok) {
+            reject(new Error(message.error || 'Could not list Eufy cameras'));
+            return;
+          }
+          resolve((message.devices || []).filter(function (device) {
+            return device && typeof device.sn === 'string' && device.stream &&
+              Array.isArray(device.capabilities) && device.capabilities.indexOf('video') !== -1;
+          }).map(function (device) {
+            return { id: device.sn, name: device.name || device.modelName || 'Eufy camera', source: 'eufy' };
+          }));
+        };
+        socket.onerror = function () {
+          clearTimeout(timeout);
+          socket.close();
+          reject(new Error('Could not connect to the Eufy video bridge from this device'));
+        };
       });
+    }).then(function (cameras) {
+      D.eufyCameras = cameras;
+      api.eufyError = '';
       state.eufy = true;
       changed();
-    }).catch(function () { state.eufy = false; });
+    }).catch(function (error) {
+      api.eufyConfig = null;
+      api.eufyError = error.message || 'Eufy live bridge unavailable';
+      state.eufy = false;
+      changed();
+    });
   }
 
   function syncWorkersAiStatus() {
@@ -161,23 +353,33 @@
     return 'cloud';
   }
 
-  function syncWeather() {
+  function syncWeather(city) {
+    var path = '/api/weather';
+    if (city) {
+      var query = new URLSearchParams({
+        latitude: String(city.latitude),
+        longitude: String(city.longitude),
+        location: city.name
+      });
+      path += '?' + query;
+    }
     function fetchForecast() {
-      return request('/api/weather').catch(function () {
+      return request(path).catch(function () {
+        var coords = city || { latitude: D.weather.latitude, longitude: D.weather.longitude, name: D.weather.location };
         var query = new URLSearchParams({
-          latitude: '33.16262',
-          longitude: '-96.93751',
+          latitude: String(coords.latitude),
+          longitude: String(coords.longitude),
           current: 'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m',
           hourly: 'temperature_2m,precipitation_probability,weather_code',
-          daily: 'temperature_2m_max,temperature_2m_min',
-          forecast_days: '2',
+          daily: 'temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max',
+          forecast_days: '7',
           timezone: 'auto'
         });
         return fetch('https://api.open-meteo.com/v1/forecast?' + query).then(function (response) {
           if (!response.ok) throw new Error('Weather request failed');
           return response.json();
         }).then(function (forecast) {
-          forecast.location = 'Little Elm, TX 75068';
+          forecast.location = coords.name;
           return forecast;
         });
       });
@@ -185,7 +387,25 @@
 
     return fetchForecast().then(function (forecast) {
       var current = forecast.current, hourly = forecast.hourly, daily = forecast.daily;
-      if (!current || !hourly || !daily) throw new Error('Weather data unavailable');
+      if (!current || !hourly || !daily || !Array.isArray(daily.time) ||
+          !Array.isArray(daily.temperature_2m_max) || !Array.isArray(daily.temperature_2m_min)) {
+        throw new Error('Weather data unavailable');
+      }
+      var days = [];
+      daily.time.forEach(function (date, index) {
+        var high = daily.temperature_2m_max[index], low = daily.temperature_2m_min[index];
+        if (!Number.isFinite(high) || !Number.isFinite(low)) return;
+        days.push({
+          date: date,
+          hi: high,
+          lo: low,
+          c: weatherIcon(daily.weather_code && daily.weather_code[index]),
+          p: daily.precipitation_probability_max && Number.isFinite(daily.precipitation_probability_max[index])
+            ? daily.precipitation_probability_max[index]
+            : null
+        });
+      });
+      if (!days.length) throw new Error('Daily weather forecast unavailable');
       var next = { t: Array(24), c: Array(24), p: Array(24) };
       hourly.time.forEach(function (time, index) {
         if (time.slice(0, 10) !== current.time.slice(0, 10)) return;
@@ -205,15 +425,31 @@
       }
       D.weather = Object.assign({}, D.weather, next, {
         location: forecast.location || D.weather.location,
-        hi: daily.temperature_2m_max[0],
-        lo: daily.temperature_2m_min[0],
+        latitude: Number.isFinite(forecast.latitude) ? forecast.latitude : (city ? city.latitude : D.weather.latitude),
+        longitude: Number.isFinite(forecast.longitude) ? forecast.longitude : (city ? city.longitude : D.weather.longitude),
+        timezone: forecast.timezone || D.weather.timezone,
+        days: days,
+        hi: days[0].hi,
+        lo: days[0].lo,
         feels: current.apparent_temperature,
         humidity: current.relative_humidity_2m,
         wind: current.wind_speed_10m
       });
       state.weather = true;
+      api.weatherError = '';
+      if (!city && !weatherSettings.cities.length &&
+          Number.isFinite(D.weather.latitude) && Number.isFinite(D.weather.longitude)) {
+        var initialCity = { name: D.weather.location, latitude: D.weather.latitude, longitude: D.weather.longitude };
+        var initial = Object.assign({}, weatherSettings, { cities: [initialCity], activeCity: 0 });
+        if (saveWeatherSettings(initial)) api.weatherSettings = weatherSettings;
+        else api.weatherSettingsError = weatherSettingsError;
+      }
       changed();
-    }).catch(function () { state.weather = false; });
+    }).catch(function (error) {
+      state.weather = false;
+      api.weatherError = error.message || 'Weather forecast unavailable';
+      changed();
+    });
   }
 
   function syncPhotos() {
@@ -246,7 +482,6 @@
   function refreshAll() {
     syncCalendar();
     syncTasks();
-    syncHomeAssistant();
     syncEufyCameras();
     syncWorkersAiStatus();
     syncWeather();
@@ -256,7 +491,6 @@
   App.on('ready', function () {
     refreshAll();
     setInterval(function () { syncCalendar(); syncTasks(); }, 5 * 60 * 1000);
-    setInterval(syncHomeAssistant, 30 * 1000);
     setInterval(syncEufyCameras, 5 * 60 * 1000);
     setInterval(syncWeather, 15 * 60 * 1000);
   });

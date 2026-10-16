@@ -4,13 +4,13 @@ window.DATA = (function () {
   base.setHours(0, 0, 0, 0);
   var n = 0;
 
-  var ALL = ['alex', 'jordan', 'maya', 'otto'];
+  var ALL = ['agilan', 'parvathi', 'sharvikaa', 'sai'];
 
   var people = [
-    { id: 'alex', name: 'Agilan', color: '#2D5BFF', rgb: '45 91 255', ink: '#FFFFFF', home: false, status: 'Away' },
-    { id: 'jordan', name: 'Parvathi', color: '#E4007C', rgb: '228 0 124', ink: '#FFFFFF', home: false, status: 'Away' },
-    { id: 'maya', name: 'Sharvikaa', color: '#00A36C', rgb: '0 163 108', ink: '#FFFFFF', home: true, status: 'Home' },
-    { id: 'otto', name: 'Sai', color: '#FFB000', rgb: '255 176 0', ink: '#111111', home: true, status: 'Home' }
+    { id: 'agilan', name: 'Agilan', color: '#2D5BFF', rgb: '45 91 255', ink: '#FFFFFF', home: false, status: 'Away' },
+    { id: 'parvathi', name: 'Parvathi', color: '#E4007C', rgb: '228 0 124', ink: '#FFFFFF', home: false, status: 'Away' },
+    { id: 'sharvikaa', name: 'Sharvikaa', color: '#00A36C', rgb: '0 163 108', ink: '#FFFFFF', home: true, status: 'Home' },
+    { id: 'sai', name: 'Sai', color: '#FFB000', rgb: '255 176 0', ink: '#111111', home: true, status: 'Home' }
   ];
   var family = { id: 'family', name: 'Family', color: '#111111', rgb: '17 17 17', ink: '#FFFFFF' };
 
@@ -28,101 +28,109 @@ window.DATA = (function () {
     return Object.assign({ id: 'c' + (++cid), r: r, who: who, title: title, emoji: emoji, stars: stars, done: !!done }, extra || {});
   }
   var chores = [
-    chore('morning', 'maya', 'Make bed', '🛏️', 1, true),
-    chore('morning', 'maya', 'Brush teeth', '🪥', 1, true),
-    chore('morning', 'maya', 'Pack backpack', '🎒', 1, true),
-    chore('morning', 'otto', 'Make bed', '🛏️', 1, true),
-    chore('morning', 'otto', 'Brush teeth', '🪥', 1, true),
-    chore('morning', 'otto', 'Get dressed', '👕', 1, false),
-    chore('morning', 'alex', 'School drop-off', '🚗', 0, true),
-    chore('morning', 'jordan', 'Pack lunches', '🥪', 0, true),
-    chore('morning', 'any', 'Feed Biscuit', '🐶', 1, true),
+    chore('morning', 'sharvikaa', 'Make bed', '🛏️', 1, true),
+    chore('morning', 'sharvikaa', 'Brush teeth', '🪥', 1, true),
+    chore('morning', 'sharvikaa', 'Pack school bag and water bottle', '🎒', 1, true),
+    chore('morning', 'sai', 'Make bed', '🛏️', 1, true),
+    chore('morning', 'sai', 'Brush teeth', '🪥', 1, true),
+    chore('morning', 'sai', 'Get dressed for school', '👕', 1, false),
+    chore('morning', 'agilan', 'School drop-off', '🚗', 0, true),
+    chore('morning', 'parvathi', 'Pack school tiffins', '🍱', 0, true),
+    chore('morning', 'any', 'Water the plants', '🪴', 1, false),
 
-    chore('after', 'maya', 'Unpack lunchbox', '🥪', 1, true),
-    chore('after', 'maya', 'Homework', '📚', 2, false),
-    chore('after', 'maya', 'Pack soccer bag', '⚽', 1, false),
-    chore('after', 'otto', 'Unpack lunchbox', '🥪', 1, true),
-    chore('after', 'otto', 'Read for 20 min', '📖', 2, false),
-    chore('after', 'otto', 'Practice piano', '🎹', 2, false),
-    chore('after', 'otto', 'Tidy the Lego', '🧱', 1, false),
-    chore('after', 'alex', 'Take out recycling', '♻️', 0, false, { overdue: true }),
-    chore('after', 'alex', 'Call the plumber', '☎️', 0, true),
-    chore('after', 'jordan', 'Fold laundry', '🧺', 0, false),
-    chore('after', 'jordan', 'Order Zoe’s gift', '🎁', 0, true),
+    chore('after', 'sharvikaa', 'Empty and rinse tiffin box', '🍱', 1, true),
+    chore('after', 'sharvikaa', 'Homework', '📚', 2, false),
+    chore('after', 'sharvikaa', 'Put away school bag', '🎒', 1, false),
+    chore('after', 'sai', 'Empty and rinse tiffin box', '🍱', 1, true),
+    chore('after', 'sai', 'Read for 20 min', '📖', 2, false),
+    chore('after', 'sai', 'Practice piano', '🎹', 2, false),
+    chore('after', 'sai', 'Practice an instrument', '🎹', 2, false),
+    chore('after', 'sai', 'Put away toys', '🧸', 1, false),
+    chore('after', 'agilan', 'Take out recycling', '♻️', 0, false),
+    chore('after', 'agilan', 'Check school messages', '📱', 0, true),
+    chore('after', 'parvathi', 'Fold laundry', '🧺', 0, false),
+    chore('after', 'any', 'Rinse and soak dal for dinner', '🥣', 1, false),
+    chore('after', 'any', 'Start rice cooker for dinner', '🍚', 1, false),
     chore('after', 'any', 'Water the plants', '🪴', 1, false),
-    chore('after', 'any', 'Empty dishwasher', '🍽️', 2, false),
-    chore('after', 'any', 'Walk Biscuit', '🐕', 2, true),
 
-    chore('evening', 'maya', 'Set the table', '🍴', 1, false),
-    chore('evening', 'maya', 'Lay out clothes', '👕', 1, false),
-    chore('evening', 'maya', 'Shower', '🚿', 1, false),
-    chore('evening', 'otto', 'Clear plates', '🍽️', 1, false),
-    chore('evening', 'otto', 'Bath', '🛁', 1, false),
-    chore('evening', 'otto', 'Lay out clothes', '👕', 1, false),
-    chore('evening', 'alex', 'Lock up', '🔐', 0, false),
-    chore('evening', 'jordan', 'Run dishwasher', '🫧', 0, false),
-    chore('evening', 'any', 'Wipe counters', '🧽', 1, false),
-    chore('evening', 'any', 'Garbage to curb', '🗑️', 2, false)
+    chore('evening', 'sharvikaa', 'Set the table', '🍴', 1, false),
+    chore('evening', 'sharvikaa', 'Set out school uniform', '👕', 1, false),
+    chore('evening', 'sharvikaa', 'Shower', '🚿', 1, false),
+    chore('evening', 'sai', 'Clear plates and lunch containers', '🍽️', 1, false),
+    chore('evening', 'sai', 'Bath', '🛁', 1, false),
+    chore('evening', 'sai', 'Set out school uniform', '👕', 1, false),
+    chore('evening', 'agilan', 'Lock up', '🔐', 0, false),
+    chore('evening', 'parvathi', 'Wash and dry tiffin boxes', '🫧', 0, false),
+    chore('evening', 'any', 'Wipe kitchen counters and stovetop', '🧽', 1, false),
+    chore('evening', 'any', 'Take out kitchen rubbish', '🗑️', 1, false)
   ];
-  var stars = { maya: 42, otto: 57 };
+  var stars = { sharvikaa: 42, sai: 57 };
   // Mon..Sun, 1 = all chores done, 0 = missed, null = future
-  var week = { maya: [1, 1, 0, 1, 1, 0, 1], otto: [1, 0, 1, 1, 1, 1, 0] };
+  var week = { sharvikaa: [1, 1, 0, 1, 1, 0, 1], sai: [1, 0, 1, 1, 1, 1, 0] };
 
   // ---------------------------------------------------------------- shopping
-  var stores = [{ id: 'grocer', name: 'FreshCo' }, { id: 'costco', name: 'Costco' }];
+  var stores = [{ id: 'grocer', name: 'Indian Grocery' }, { id: 'costco', name: 'Costco' }];
   var catOrder = {
-    all: ['Produce', 'Bakery', 'Meat & Fish', 'Dairy & Eggs', 'Pantry', 'Frozen', 'Snacks', 'Household'],
-    grocer: ['Produce', 'Bakery', 'Meat & Fish', 'Dairy & Eggs', 'Pantry', 'Frozen', 'Snacks', 'Household'],
-    costco: ['Household', 'Pantry', 'Snacks', 'Dairy & Eggs', 'Meat & Fish', 'Frozen', 'Produce', 'Bakery']
+    all: ['Produce', 'Dairy & Refrigerated', 'Grains & Lentils', 'Protein & Meat', 'Spices & Pantry', 'Bakery & Breakfast', 'Frozen', 'Snacks', 'Household'],
+    grocer: ['Produce', 'Dairy & Refrigerated', 'Grains & Lentils', 'Protein & Meat', 'Spices & Pantry', 'Bakery & Breakfast', 'Frozen', 'Snacks', 'Household'],
+    costco: ['Household', 'Snacks', 'Dairy & Refrigerated', 'Protein & Meat', 'Grains & Lentils', 'Produce', 'Bakery & Breakfast', 'Frozen', 'Spices & Pantry']
   };
   var gid = 0;
   function g(name, cat, qty, store, done, note) {
     return { id: 'g' + (++gid), name: name, cat: cat, qty: qty, store: store, done: !!done, note: note || '' };
   }
   var groceries = [
-    g('Bananas', 'Produce', 1, 'grocer', false, 'Bunch, not too ripe'),
-    g('Baby spinach', 'Produce', 1, 'grocer'),
-    g('Avocados', 'Produce', 3, 'grocer'),
-    g('Honeycrisp apples', 'Produce', 6, 'grocer'),
-    g('Sourdough loaf', 'Bakery', 1, 'grocer'),
-    g('Bagels', 'Bakery', 2, 'costco', false, 'Everything'),
-    g('Chicken thighs', 'Meat & Fish', 1, 'grocer', false, 'Boneless'),
-    g('Salmon fillets', 'Meat & Fish', 2, 'grocer'),
-    g('Milk 2%', 'Dairy & Eggs', 2, 'costco'),
-    g('Eggs', 'Dairy & Eggs', 1, 'costco', false, '2 dozen'),
-    g('Greek yogurt', 'Dairy & Eggs', 1, 'grocer'),
-    g('Aged cheddar', 'Dairy & Eggs', 1, 'grocer'),
-    g('Rigatoni', 'Pantry', 2, 'grocer'),
-    g('Olive oil', 'Pantry', 1, 'costco'),
-    g('Coffee beans', 'Pantry', 1, 'grocer', false, 'Dark roast'),
+    g('Bananas', 'Produce', 1, 'grocer'),
+    g('Onions', 'Produce', 2, 'grocer'),
+    g('Tomatoes', 'Produce', 1, 'grocer'),
+    g('Cilantro', 'Produce', 2, 'grocer'),
+    g('Curry leaves', 'Produce', 1, 'grocer'),
+    g('Green chillies', 'Produce', 1, 'grocer'),
+    g('Ginger', 'Produce', 1, 'grocer'),
+    g('Plain yogurt / curd', 'Dairy & Refrigerated', 1, 'grocer'),
+    g('Paneer', 'Dairy & Refrigerated', 1, 'grocer'),
+    g('Milk', 'Dairy & Refrigerated', 1, 'costco'),
+    g('Dosa / idli batter', 'Dairy & Refrigerated', 1, 'grocer'),
+    g('Basmati rice', 'Grains & Lentils', 1, 'grocer'),
+    g('Toor dal', 'Grains & Lentils', 1, 'grocer'),
+    g('Whole wheat atta', 'Grains & Lentils', 1, 'grocer'),
+    g('Eggs', 'Protein & Meat', 1, 'costco'),
+    g('Chicken thighs', 'Protein & Meat', 1, 'grocer', false, 'Optional'),
+    g('Cumin seeds', 'Spices & Pantry', 1, 'grocer'),
+    g('Turmeric powder', 'Spices & Pantry', 1, 'grocer'),
+    g('Mustard seeds', 'Spices & Pantry', 1, 'grocer'),
+    g('Garam masala', 'Spices & Pantry', 1, 'grocer'),
+    g('Ghee', 'Spices & Pantry', 1, 'grocer'),
+    g('Tea', 'Spices & Pantry', 1, 'costco'),
     g('Frozen peas', 'Frozen', 1, 'grocer'),
-    g('Waffles', 'Frozen', 1, 'grocer'),
-    g('Goldfish crackers', 'Snacks', 1, 'costco'),
-    g('Granola bars', 'Snacks', 1, 'grocer'),
-    g('Paper towels', 'Household', 1, 'costco'),
-    g('Dish soap', 'Household', 1, 'grocer'),
-    g('Lemons', 'Produce', 2, 'grocer', true),
-    g('Butter', 'Dairy & Eggs', 1, 'grocer', true),
-    g('Tortillas', 'Bakery', 1, 'grocer', true)
+    g('Roasted makhana', 'Snacks', 1, 'grocer'),
+    g('Mixed nuts', 'Snacks', 1, 'costco'),
+    g('Tiffin liners / snack bags', 'Household', 1, 'costco'),
+    g('Dish soap', 'Household', 1, 'grocer')
   ];
   var catalog = [
-    ['Apples', 'Produce'], ['Avocados', 'Produce'], ['Bananas', 'Produce'], ['Baby spinach', 'Produce'], ['Blueberries', 'Produce'],
-    ['Broccoli', 'Produce'], ['Carrots', 'Produce'], ['Cucumber', 'Produce'], ['Garlic', 'Produce'], ['Grapes', 'Produce'],
-    ['Lemons', 'Produce'], ['Limes', 'Produce'], ['Onions', 'Produce'], ['Potatoes', 'Produce'], ['Strawberries', 'Produce'],
-    ['Tomatoes', 'Produce'], ['Bread', 'Bakery'], ['Bagels', 'Bakery'], ['Croissants', 'Bakery'], ['Sourdough loaf', 'Bakery'],
-    ['Tortillas', 'Bakery'], ['Hamburger buns', 'Bakery'], ['Bacon', 'Meat & Fish'], ['Chicken breasts', 'Meat & Fish'],
-    ['Chicken thighs', 'Meat & Fish'], ['Ground beef', 'Meat & Fish'], ['Salmon fillets', 'Meat & Fish'], ['Shrimp', 'Meat & Fish'],
-    ['Butter', 'Dairy & Eggs'], ['Cheddar', 'Dairy & Eggs'], ['Cream cheese', 'Dairy & Eggs'], ['Eggs', 'Dairy & Eggs'],
-    ['Greek yogurt', 'Dairy & Eggs'], ['Milk 2%', 'Dairy & Eggs'], ['Oat milk', 'Dairy & Eggs'], ['Parmesan', 'Dairy & Eggs'],
-    ['Black beans', 'Pantry'], ['Cereal', 'Pantry'], ['Coffee beans', 'Pantry'], ['Flour', 'Pantry'], ['Honey', 'Pantry'],
-    ['Maple syrup', 'Pantry'], ['Olive oil', 'Pantry'], ['Pasta sauce', 'Pantry'], ['Peanut butter', 'Pantry'], ['Rice', 'Pantry'],
-    ['Rigatoni', 'Pantry'], ['Spaghetti', 'Pantry'], ['Sugar', 'Pantry'], ['Tea', 'Pantry'], ['Frozen peas', 'Frozen'],
-    ['Frozen berries', 'Frozen'], ['Ice cream', 'Frozen'], ['Pizza', 'Frozen'], ['Waffles', 'Frozen'], ['Chips', 'Snacks'],
-    ['Crackers', 'Snacks'], ['Dark chocolate', 'Snacks'], ['Goldfish crackers', 'Snacks'], ['Granola bars', 'Snacks'],
-    ['Popcorn', 'Snacks'], ['Dish soap', 'Household'], ['Dishwasher pods', 'Household'], ['Garbage bags', 'Household'],
-    ['Laundry detergent', 'Household'], ['Paper towels', 'Household'], ['Toilet paper', 'Household'], ['Toothpaste', 'Household']
+    ['Apples', 'Produce'], ['Avocados', 'Produce'], ['Bananas', 'Produce'], ['Beans', 'Produce'], ['Bell peppers', 'Produce'],
+    ['Bitter gourd', 'Produce'], ['Bottle gourd', 'Produce'], ['Broccoli', 'Produce'], ['Cabbage', 'Produce'], ['Carrots', 'Produce'],
+    ['Cauliflower', 'Produce'], ['Cilantro', 'Produce'], ['Cucumbers', 'Produce'], ['Curry leaves', 'Produce'], ['Eggplant', 'Produce'],
+    ['Garlic', 'Produce'], ['Ginger', 'Produce'], ['Green chillies', 'Produce'], ['Lemons', 'Produce'], ['Limes', 'Produce'],
+    ['Mangoes', 'Produce'], ['Okra', 'Produce'], ['Onions', 'Produce'], ['Potatoes', 'Produce'], ['Spinach', 'Produce'],
+    ['Sweet potatoes', 'Produce'], ['Tomatoes', 'Produce'], ['Plain yogurt / curd', 'Dairy & Refrigerated'], ['Paneer', 'Dairy & Refrigerated'],
+    ['Milk', 'Dairy & Refrigerated'], ['Eggs', 'Protein & Meat'], ['Dosa / idli batter', 'Dairy & Refrigerated'],
+    ['Coconut milk', 'Dairy & Refrigerated'], ['Butter', 'Dairy & Refrigerated'], ['Basmati rice', 'Grains & Lentils'],
+    ['Sona masoori rice', 'Grains & Lentils'], ['Whole wheat atta', 'Grains & Lentils'], ['Toor dal', 'Grains & Lentils'],
+    ['Moong dal', 'Grains & Lentils'], ['Masoor dal', 'Grains & Lentils'], ['Chana dal', 'Grains & Lentils'],
+    ['Chickpeas', 'Grains & Lentils'], ['Poha', 'Grains & Lentils'], ['Semolina / rava', 'Grains & Lentils'],
+    ['Chicken breasts', 'Protein & Meat'], ['Chicken thighs', 'Protein & Meat'], ['Ground meat', 'Protein & Meat'],
+    ['Fish', 'Protein & Meat'], ['Cumin seeds', 'Spices & Pantry'], ['Mustard seeds', 'Spices & Pantry'],
+    ['Turmeric powder', 'Spices & Pantry'], ['Garam masala', 'Spices & Pantry'], ['Chilli powder', 'Spices & Pantry'],
+    ['Coriander powder', 'Spices & Pantry'], ['Sambar powder', 'Spices & Pantry'], ['Rasam powder', 'Spices & Pantry'],
+    ['Ghee', 'Spices & Pantry'], ['Tamarind', 'Spices & Pantry'], ['Jaggery', 'Spices & Pantry'],
+    ['Tea', 'Spices & Pantry'], ['Coffee', 'Spices & Pantry'], ['Bread', 'Bakery & Breakfast'], ['Oats', 'Bakery & Breakfast'],
+    ['Frozen peas', 'Frozen'], ['Frozen parathas', 'Frozen'], ['Roasted makhana', 'Snacks'], ['Mixture / namkeen', 'Snacks'],
+    ['Mixed nuts', 'Snacks'], ['Dish soap', 'Household'], ['Laundry detergent', 'Household'],
+    ['Garbage bags', 'Household'], ['Tiffin liners / snack bags', 'Household'], ['Toothpaste', 'Household']
   ];
-  var usuals = ['Milk 2%', 'Eggs', 'Bananas', 'Bread', 'Apples', 'Coffee beans', 'Greek yogurt', 'Cheddar', 'Butter', 'Baby spinach', 'Chicken thighs', 'Paper towels'];
+  var usuals = ['Onions', 'Tomatoes', 'Cilantro', 'Curry leaves', 'Plain yogurt / curd', 'Paneer', 'Basmati rice', 'Toor dal', 'Whole wheat atta', 'Dosa / idli batter', 'Ghee', 'Tea'];
 
   // ---------------------------------------------------------------- home control
   var rooms = [
@@ -145,8 +153,8 @@ window.DATA = (function () {
     { id: 'e-porch', room: 'entry', type: 'light', name: 'Porch', on: true, level: 100 },
     { id: 'g-door', room: 'entry', type: 'garage', name: 'Garage', state: 'closed' },
     { id: 'g-side', room: 'entry', type: 'lock', name: 'Side Door', locked: true },
-    { id: 'u-maya', room: 'upstairs', type: 'light', name: "Sharvikaa's Lamp", on: true, level: 30 },
-    { id: 'u-otto', room: 'upstairs', type: 'light', name: "Sai's Nightlight", on: false, level: 15 },
+    { id: 'u-sharvikaa', room: 'upstairs', type: 'light', name: "Sharvikaa's Lamp", on: true, level: 30 },
+    { id: 'u-sai', room: 'upstairs', type: 'light', name: "Sai's Nightlight", on: false, level: 15 },
     { id: 'u-hall', room: 'upstairs', type: 'light', name: 'Hallway', on: false, level: 60 },
     { id: 'u-bath', room: 'upstairs', type: 'light', name: 'Bathroom', on: false, level: 100 },
     { id: 'y-string', room: 'yard', type: 'light', name: 'String Lights', on: false, level: 100, flaky: true },
@@ -164,13 +172,22 @@ window.DATA = (function () {
     { id: 'morning', name: 'Morning', icon: 'sunrise', set: { 'k-pend': 100, 'k-under': 80, 'l-blinds': 100, 'l-lamp': 0, 'u-hall': 60 } },
     { id: 'dinner', name: 'Dinner', icon: 'utensils', set: { 'k-pend': 55, 'k-under': 30, 'k-island': 70, 'l-lamp': 40, 'l-ceil': 0 } },
     { id: 'movie', name: 'Movie', icon: 'film', set: { 'k-pend': 0, 'k-under': 15, 'k-island': 0, 'l-lamp': 15, 'l-ceil': 0, 'l-blinds': 0, 'l-fire': 30 } },
-    { id: 'away', name: 'Away', icon: 'away', set: { 'k-pend': 0, 'k-under': 0, 'k-island': 0, 'l-lamp': 0, 'l-ceil': 0, 'l-fire': 0, 'u-maya': 0, 'u-hall': 0, 'e-porch': 100 } },
-    { id: 'night', name: 'Goodnight', icon: 'moon', set: { 'k-pend': 0, 'k-under': 10, 'k-island': 0, 'l-lamp': 0, 'l-ceil': 0, 'l-fire': 0, 'u-hall': 10, 'u-otto': 15, 'e-porch': 0 } }
+    { id: 'away', name: 'Away', icon: 'away', set: { 'k-pend': 0, 'k-under': 0, 'k-island': 0, 'l-lamp': 0, 'l-ceil': 0, 'l-fire': 0, 'u-sharvikaa': 0, 'u-hall': 0, 'e-porch': 100 } },
+    { id: 'night', name: 'Goodnight', icon: 'moon', set: { 'k-pend': 0, 'k-under': 10, 'k-island': 0, 'l-lamp': 0, 'l-ceil': 0, 'l-fire': 0, 'u-hall': 10, 'u-sai': 15, 'e-porch': 0 } }
   ];
 
   // ---------------------------------------------------------------- weather (index = hour of day)
   var weather = {
-    location: 'Little Elm, TX 75068', hi: 17, lo: 8, feels: -2, humidity: 71, wind: 18,
+    location: 'Little Elm, TX 75068', latitude: 33.16262, longitude: -96.93751, timezone: 'America/Chicago', hi: 17, lo: 8, feels: -2, humidity: 71, wind: 18,
+    days: [
+      { offset: 0, hi: 17, lo: 8, c: 'partly', p: 10 },
+      { offset: 1, hi: 18, lo: 7, c: 'sun', p: 0 },
+      { offset: 2, hi: 16, lo: 9, c: 'cloud', p: 15 },
+      { offset: 3, hi: 14, lo: 8, c: 'rain', p: 70 },
+      { offset: 4, hi: 15, lo: 7, c: 'partly', p: 10 },
+      { offset: 5, hi: 19, lo: 9, c: 'sun', p: 0 },
+      { offset: 6, hi: 18, lo: 10, c: 'cloud', p: 20 }
+    ],
     t: [9, 9, 8, 8, 8, 8, 9, 10, 11, 12, 13, 15, 16, 17, 16, 15, 14, 13, 12, 12, 11, 10, 10, 9],
     c: ['moon', 'moon', 'moon', 'moon', 'moon', 'moon', 'partly', 'partly', 'sun', 'sun', 'sun', 'partly', 'partly', 'cloud', 'cloud', 'cloud', 'rain', 'rain', 'rain', 'rain', 'cloud', 'cloud', 'moon', 'moon'],
     p: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 10, 20, 25, 40, 80, 90, 70, 55, 20, 10, 0, 0]
@@ -180,26 +197,26 @@ window.DATA = (function () {
   var t = new Date(base);
   var mmdd = ('0' + (t.getMonth() + 1)).slice(-2) + '-' + ('0' + t.getDate()).slice(-2);
   var photos = [
-    { seed: 'tofino-surf', o: 'l', date: '2021-' + mmdd, place: 'Tofino, BC', from: 'jordan', tag: 'tofino' },
-    { seed: 'cottage-dock', o: 'l', date: '2023-08-12', place: 'Lake of Bays', from: 'alex', tag: 'cottage' },
-    { seed: 'maya-kite', o: 'p', date: '2024-05-19', place: 'Humber Bay Park', from: 'jordan', tag: 'spring24' },
-    { seed: 'otto-kite', o: 'p', date: '2024-05-19', place: 'Humber Bay Park', from: 'alex', tag: 'spring24' },
-    { seed: 'autumn-walk', o: 'l', date: '2022-10-09', place: 'High Park', from: 'alex', tag: 'fall22' },
-    { seed: 'birthday-cake', o: 'p', date: '2025-10-12', place: 'Home', from: 'jordan', tag: 'bday25' },
-    { seed: 'candles-lit', o: 'p', date: '2025-10-12', place: 'Home', from: 'alex', tag: 'bday25' },
-    { seed: 'mountain-lake', o: 'l', date: '2019-' + mmdd, place: 'Banff, AB', from: 'alex', tag: 'banff' },
-    { seed: 'snow-day', o: 'l', date: '2024-01-21', place: 'Riverdale Hill', from: 'jordan', tag: 'winter24' },
-    { seed: 'beach-dunes', o: 'l', date: '2023-07-02', place: 'Sandbanks', from: 'maya', tag: 'sandbanks' },
-    { seed: 'city-night', o: 'l', date: '2022-12-18', place: 'Nathan Phillips Sq.', from: 'jordan', tag: 'xmas22' },
-    { seed: 'garden-bloom', o: 'p', date: '2025-06-08', place: 'Backyard', from: 'otto', tag: 'garden' },
-    { seed: 'tomato-haul', o: 'p', date: '2025-06-08', place: 'Backyard', from: 'maya', tag: 'garden' },
-    { seed: 'road-trip', o: 'l', date: '2024-08-04', place: 'Cabot Trail, NS', from: 'alex', tag: 'ns' },
-    { seed: 'campfire', o: 'l', date: '2024-08-06', place: 'Cape Breton', from: 'jordan', tag: 'ns' },
-    { seed: 'forest-path', o: 'l', date: '2020-09-26', place: 'Algonquin', from: 'alex', tag: 'algonquin' },
-    { seed: 'pancakes', o: 'p', date: '2026-03-14', place: 'Home', from: 'maya', tag: 'pancakes' },
-    { seed: 'sugar-shack', o: 'p', date: '2026-03-14', place: 'Sugar Shack', from: 'jordan', tag: 'pancakes' },
-    { seed: 'harbour-sail', o: 'l', date: '2025-07-19', place: 'Toronto Harbour', from: 'otto', tag: 'sail' },
-    { seed: 'pumpkins', o: 'l', date: '2025-10-25', place: "Chudleigh's", from: 'maya', tag: 'fall25' }
+    { seed: 'tofino-surf', o: 'l', date: '2021-' + mmdd, place: 'Tofino, BC', from: 'parvathi', tag: 'tofino' },
+    { seed: 'cottage-dock', o: 'l', date: '2023-08-12', place: 'Lake of Bays', from: 'agilan', tag: 'cottage' },
+    { seed: 'sharvikaa-kite', o: 'p', date: '2024-05-19', place: 'Humber Bay Park', from: 'parvathi', tag: 'spring24' },
+    { seed: 'sai-kite', o: 'p', date: '2024-05-19', place: 'Humber Bay Park', from: 'agilan', tag: 'spring24' },
+    { seed: 'autumn-walk', o: 'l', date: '2022-10-09', place: 'High Park', from: 'agilan', tag: 'fall22' },
+    { seed: 'birthday-cake', o: 'p', date: '2025-10-12', place: 'Home', from: 'parvathi', tag: 'bday25' },
+    { seed: 'candles-lit', o: 'p', date: '2025-10-12', place: 'Home', from: 'agilan', tag: 'bday25' },
+    { seed: 'mountain-lake', o: 'l', date: '2019-' + mmdd, place: 'Banff, AB', from: 'agilan', tag: 'banff' },
+    { seed: 'snow-day', o: 'l', date: '2024-01-21', place: 'Riverdale Hill', from: 'parvathi', tag: 'winter24' },
+    { seed: 'beach-dunes', o: 'l', date: '2023-07-02', place: 'Sandbanks', from: 'sharvikaa', tag: 'sandbanks' },
+    { seed: 'city-night', o: 'l', date: '2022-12-18', place: 'Nathan Phillips Sq.', from: 'parvathi', tag: 'xmas22' },
+    { seed: 'garden-bloom', o: 'p', date: '2025-06-08', place: 'Backyard', from: 'sai', tag: 'garden' },
+    { seed: 'tomato-haul', o: 'p', date: '2025-06-08', place: 'Backyard', from: 'sharvikaa', tag: 'garden' },
+    { seed: 'road-trip', o: 'l', date: '2024-08-04', place: 'Cabot Trail, NS', from: 'agilan', tag: 'ns' },
+    { seed: 'campfire', o: 'l', date: '2024-08-06', place: 'Cape Breton', from: 'parvathi', tag: 'ns' },
+    { seed: 'forest-path', o: 'l', date: '2020-09-26', place: 'Algonquin', from: 'agilan', tag: 'algonquin' },
+    { seed: 'pancakes', o: 'p', date: '2026-03-14', place: 'Home', from: 'sharvikaa', tag: 'pancakes' },
+    { seed: 'sugar-shack', o: 'p', date: '2026-03-14', place: 'Sugar Shack', from: 'parvathi', tag: 'pancakes' },
+    { seed: 'harbour-sail', o: 'l', date: '2025-07-19', place: 'Toronto Harbour', from: 'sai', tag: 'sail' },
+    { seed: 'pumpkins', o: 'l', date: '2025-10-25', place: "Chudleigh's", from: 'sharvikaa', tag: 'fall25' }
   ];
 
   // ---------------------------------------------------------------- AI agent usage (CodexBar-style)

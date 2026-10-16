@@ -66,6 +66,11 @@ Settings → About before you follow any guide:
 
 [`dashboard/`](dashboard) is the family dashboard we run on the BIUFRAME: a Vite web app deployed to
 Cloudflare Workers, with demo-data fallback and optional Google and Home Assistant integrations.
+The current dashboard includes a modern Today screen, an editable calendar, locally saved chores
+and shopping lists, a family photo slideshow, camera controls, an AI chat assistant, interactive
+hourly and 7-day weather, and a personal stock watchlist. Google Calendar/Tasks, Home Assistant,
+live Eufy video, Workers AI, and Finnhub quotes are optional integrations; each requires its own
+configuration described below.
 `dashboard/kiosk/` is a small full-screen WebView Android app,
 built without Gradle, that shows it. Hold two fingers still for 1.5 s to open a menu for the
 launcher, Android settings, and reloading. On frames without system navigation, optional floating
@@ -128,28 +133,32 @@ commit them.
    `switch.*` / `light.*` entities can be toggled. Device compatibility depends on the Eufy model and
    Home Assistant integration. Never expose Home Assistant directly to the public internet without
    HTTPS and strong access controls.
-- **Eufy without Home Assistant:** `dashboard/eufy-bridge/` is a local Node 24.5+ bridge using the
-   unofficial `@mega-yfue/eufy-sdk`. If `.env` does not exist, run `cp .env.example .env`; then set
-   your Eufy login and a random `EUFY_BRIDGE_TOKEN`, and run `npm install` and `npm start` from that
-   directory. First login
-   may prompt for CAPTCHA or two-factor verification; the session is stored locally. Copy the same
-   bridge token into `dashboard/.dev.vars` with `EUFY_BRIDGE_URL=http://127.0.0.1:8791`, then run the
-   dashboard Worker locally. The bridge listens on loopback by default and never sends account
-   credentials to the browser. Camera tiles use stored motion snapshots; opening a camera requests a
-   fresh snapshot and may wake a battery camera. Fresh snapshots need `ffmpeg` on the bridge host.
-   This is an unofficial integration and may break if Eufy changes its service. For a deployed
-   Cloudflare Worker, `127.0.0.1` is not your home network: expose the bridge to the Worker only via a
-   secured HTTPS tunnel and set `EUFY_BRIDGE_URL`/`EUFY_BRIDGE_TOKEN` as Worker secrets.
+- **Eufy live video:** use the maintained [`ha-eufy-sdk-bridge`](https://github.com/mega-yfue/ha-eufy-sdk-bridge)
+   with go2rtc for live playback and snapshots. The dashboard connects directly to this bridge from
+   the photo frame, so serve the Worker locally on the home network; a Cloudflare-hosted Worker
+   cannot reach a private LAN address. Follow [the Eufy live-video setup](docs/eufy-live-video.md).
+   The older `dashboard/eufy-bridge/` snapshot-only server is not used by this setup. Do not run both
+   bridges on one Eufy account, and never expose the bridge or go2rtc ports to the public internet.
 - **Weather:** the dashboard requests current and hourly forecast data from
-   [Open-Meteo](https://open-meteo.com/). The selected default is Little Elm, TX 75068
-   (`33.16262, -96.93751`); override it with `WEATHER_LOCATION`, `WEATHER_LAT`, and `WEATHER_LON` in
-   `.dev.vars` if needed. It does not use browser geolocation. The clock uses the device's local time
-   and timezone.
+   [Open-Meteo](https://open-meteo.com/). Tap the weather card to switch between hourly and 7-day
+   forecasts, change Celsius/Fahrenheit, search for cities, and choose the active forecast. These
+   preferences are stored in that browser.
+   The initial default is Little Elm, TX 75068 (`33.16262, -96.93751`); override it with
+   `WEATHER_LOCATION`, `WEATHER_LAT`, and `WEATHER_LON` in `.dev.vars` if needed. It does not use
+   browser geolocation. The clock uses the device's local time and timezone.
+- **Stocks:** the Stocks screen uses Finnhub's quote endpoint through the Worker. Create a Finnhub
+   API key and add `FINNHUB_API_KEY=...` to the ignored `dashboard/.dev.vars` for local Wrangler
+   development. For deployment, run `npx wrangler secret put FINNHUB_API_KEY` from `dashboard/`.
+   The frame stores up to 12 US-listed ticker symbols locally and requests quotes through the Worker;
+   the key is never sent to the browser. Quote availability, delay, and rate limits depend on
+   Finnhub's plan and exchange. This display is informational, not investment advice.
 - **Photos:** put image files under `dashboard/public/photos/` and list them in
    `dashboard/public/photos/manifest.json`. Only listed files are shown. That folder is git-ignored
    except for the manifest, because family photos should not be committed. Export or sync photos from
    Google Photos or Apple Photos into this folder yourself; Apple Photos integration is not connected
-   directly.
+   directly. The built-in starter slideshow uses sample online images until you add your own photos.
+   For privacy, review the sample-image provider's terms before using the starter slideshow in a
+   public deployment.
 
 For Cloudflare deployment, configure the same values as Worker secrets with `npx wrangler secret
 put NAME` from `dashboard/` before running `npm run deploy`. At minimum, set
@@ -268,6 +277,20 @@ trusting it, and remember that a past approval is not permission for a new write
 - Replacing Android: [android-replacement.md](docs/android-replacement.md),
   [android14-dsu.md](docs/android14-dsu.md) (Android 14 GSI trial through DSU)
 - [external-networking.md](docs/external-networking.md)
+
+## Credits and services
+
+- [Open-Meteo](https://open-meteo.com/) provides weather forecasts and city geocoding.
+- [Finnhub](https://finnhub.io/) provides stock quotes; availability, delay, and rate limits depend
+  on the account and exchange.
+- [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) runs the optional chat
+  assistant. The default model is from [Meta Llama](https://www.llama.com/).
+- [Google APIs](https://developers.google.com/) provide the optional Calendar and Tasks integration.
+- [ha-eufy-sdk-bridge](https://github.com/mega-yfue/ha-eufy-sdk-bridge) and
+  [go2rtc](https://github.com/AlexxIT/go2rtc) enable optional local-network Eufy camera playback.
+- [Manrope](https://fonts.google.com/specimen/Manrope) is loaded from Google Fonts.
+- The starter slideshow uses sample images from [Picsum Photos](https://picsum.photos/). Add your own
+  images for a private family slideshow; see the [photo setup](#live-services).
 
 ## Privacy
 

@@ -1,23 +1,23 @@
 /* Design tokens. Target: Android WebView 106 — no nesting, no color-mix(), no oklch(), no dvh. */
 :root {
   /* paper + ink */
-  --paper: #F2EEE6;
-  --paper-2: #E8E2D5;
-  --card: #FBF9F4;
-  --ink: #111111;
-  --ink-rgb: 17 17 17;
-  --ink-2: #3B3934;
-  --mute: #7A756B;
-  --line: #D6CFC0;
+  --paper: #F2F5F9;
+  --paper-2: #E7EDF4;
+  --card: #FFFFFF;
+  --ink: #18243A;
+  --ink-rgb: 24 36 58;
+  --ink-2: #40516A;
+  --mute: #748198;
+  --line: #DCE4EE;
 
   /* signal colours */
-  --alert: #E5261E;
-  --alert-rgb: 229 38 30;
-  --amber: #FF9500;
-  --amber-rgb: 255 149 0;
-  --ok: #00A36C;
-  --warm: #FFC45C;
-  --warm-rgb: 255 196 92;
+  --alert: #D94B52;
+  --alert-rgb: 217 75 82;
+  --amber: #E9A43A;
+  --amber-rgb: 233 164 58;
+  --ok: #159A83;
+  --warm: #F4D991;
+  --warm-rgb: 244 217 145;
   --night: #D8321F;
 
   /* person colour defaults (overridden inline per element) */
@@ -26,8 +26,8 @@
   --c-ink: #FFFFFF;
 
   /* type */
-  --sans: 'Archivo', 'Roboto Condensed', 'Roboto', system-ui, sans-serif;
-  --serif: 'Instrument Serif', 'Noto Serif', Georgia, serif;
+  --sans: 'Manrope', 'Avenir Next', 'Roboto', system-ui, sans-serif;
+  --serif: 'Manrope', 'Avenir Next', 'Roboto', system-ui, sans-serif;
   --fs-clock: 150px;
   --fs-hero: 76px;
   --fs-xl: 56px;
@@ -38,9 +38,9 @@
   --fs-min: 14px;
 
   /* shape + space */
-  --r: 18px;
-  --r-s: 12px;
-  --gap: 16px;
+  --r: 22px;
+  --r-s: 15px;
+  --gap: 18px;
   --pad: 24px;
   --tap: 64px;
   --ease: cubic-bezier(.2, .8, .2, 1);

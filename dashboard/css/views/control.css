@@ -77,12 +77,20 @@
 .hc-climate .seg button { flex: 1; padding: 0; text-align: center; }
 
 /* cameras + media */
-.cams { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.camera-view { height: 100%; display: flex; flex-direction: column; gap: 18px; }
+.camera-view-head { border-bottom: 2px solid var(--ink); padding-bottom: 14px; }
+.camera-view-head h1 { font-size: 54px; line-height: 1; margin-top: 6px; }
+.camera-view-head p { color: var(--ink-2); font-size: 18px; margin-top: 8px; }
+.camera-view .cams { flex: 1; align-content: start; overflow-y: auto; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 0; }
+.camera-view .cam { aspect-ratio: 16 / 10; }
+.camera-empty { display: grid; flex: 1; place-items: center; padding: 32px; border-radius: var(--r); background: var(--card); color: var(--ink-2); font-family: var(--serif); font-size: 28px; text-align: center; }
+.cams { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+.cam-error { margin-top: 6px; color: var(--amber); font-size: 14px; }
 .cam { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 11; background: #333; color: #fff; }
 .cam img { width: 100%; height: 100%; object-fit: cover; }
 .cam::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: linear-gradient(0deg, rgba(0, 0, 0, .6), rgba(0, 0, 0, 0) 55%); }
 .cam-name { position: absolute; left: 10px; bottom: 8px; z-index: 1; font-size: var(--fs-min); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
-.cam-age { position: absolute; right: 8px; top: 8px; z-index: 1; font-size: 13px; font-weight: 700; padding: 3px 7px; border-radius: 6px; background: rgba(0, 0, 0, .5); font-variant-numeric: tabular-nums; }
+.cam-age { position: absolute; right: 8px; top: 8px; z-index: 1; max-width: calc(100% - 16px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 700; padding: 3px 7px; border-radius: 6px; background: rgba(0, 0, 0, .5); font-variant-numeric: tabular-nums; }
 .hc-media { display: flex; align-items: center; gap: 14px; padding: 12px; margin-top: auto; }
 .np-art { width: 76px; height: 76px; border-radius: 10px; object-fit: cover; background: var(--paper-2); }
 .np-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -101,6 +109,13 @@
 .sheet--cam .sheet-x { background: rgba(255, 255, 255, .2); color: #fff; }
 .cam-big { position: relative; }
 .cam-big img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+.cam-live { width: 100%; aspect-ratio: 16 / 9; background: #111; }
+.cam-live iframe { display: block; width: 100%; height: 100%; border: 0; }
+.cam-still { display: flex; justify-content: center; padding: 10px 20px 0; }
+.cam-still img { width: 240px; max-height: 150px; object-fit: cover; background: #111; }
 .cam-big .tk-live { left: 20px; top: 20px; }
 .cam-big-bar .label { position: absolute; left: 24px; bottom: 20px; }
+.cam-refresh { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px 20px; color: #fff; }
+.cam-refresh [data-camera-status] { font-size: 16px; }
+.cam-refresh button:disabled { opacity: .6; }
 .is-pulse { box-shadow: 0 0 0 6px var(--warm); }

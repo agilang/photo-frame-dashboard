@@ -2,6 +2,11 @@
 (function () {
   'use strict';
   var D = window.DATA, V = {};
+  var weatherForecastMode = 'hourly';
+
+  function weatherForecastLabel() {
+    return weatherForecastMode === 'daily' ? 'Daily forecast' : 'Hourly forecast';
+  }
 
   function clock() {
     var n = App.now();
@@ -11,20 +16,141 @@
 
   function weather() {
     var w = App.weatherNow();
+    var weatherPrefs = window.DASHBOARD_INTEGRATIONS.weatherSettings;
     var hours = App.hourly(7);
     var tmin = Math.min.apply(null, hours.map(function (h) { return h.t; }));
     var tmax = Math.max.apply(null, hours.map(function (h) { return h.t; }));
-    return '<div class="h-wx-top">' +
-      '<span class="h-wx-icon">' + App.icon(w.cond, 60) + '</span>' +
-      '<span class="h-wx-temp num">' + w.temp + '°</span>' +
-      '<span class="h-wx-meta"><b>' + w.label + '</b><span>H ' + w.hi + '°  L ' + w.lo + '°</span><span class="h-wx-location">' + App.esc(w.location || 'Little Elm, TX 75068') + '</span></span>' +
+    return '<span class="h-wx-action">' + weatherForecastLabel() + ' ' + App.icon('right', 16) + '</span>' +
+      '<div class="h-wx-top">' +
+      '<span class="h-wx-icon" data-weather-cond="' + App.esc(w.cond) + '">' + App.icon(w.cond, 60) + '</span>' +
+      '<span class="h-wx-temp num">' + window.DASHBOARD_INTEGRATIONS.temperature(w.temp) + '°</span>' +
+      '<span class="h-wx-meta"><b>' + w.label + '</b><span>H ' + window.DASHBOARD_INTEGRATIONS.temperature(w.hi) + '°  L ' + window.DASHBOARD_INTEGRATIONS.temperature(w.lo) + '° · ' + weatherPrefs.unit + '</span><span class="h-wx-location">' + App.esc(w.location || 'Little Elm, TX 75068') + '</span></span>' +
       '</div>' +
       '<div class="h-wx-say"><b>' + w.summary + '.</b> ' + w.advice + '.</div>' +
       '<div class="h-wx-hours">' + hours.map(function (h) {
         var lift = tmax === tmin ? 0 : Math.round((h.t - tmin) / (tmax - tmin) * 8);
-        return '<div class="h-hr' + (h.p >= 50 ? ' is-wet' : '') + '"><span class="h-hr-l">' + h.label + '</span>' +
-          '<span class="h-hr-i" style="transform:translateY(' + -lift + 'px)">' + App.icon(h.c, 22) + '</span><b>' + h.t + '°</b></div>';
+        return '<div class="h-hr' + (h.p >= 50 ? ' is-wet' : '') + '" data-weather-cond="' + App.esc(h.c) + '"><span class="h-hr-l">' + h.label + '</span>' +
+          '<span class="h-hr-i" style="--wx-lift:' + -lift + 'px">' + App.icon(h.c, 22) + '</span><b>' + window.DASHBOARD_INTEGRATIONS.temperature(h.t) + '°</b></div>';
       }).join('') + '</div>';
+  }
+
+  function paintWeatherCard() {
+    if (!V.el) return;
+    var card = V.el.querySelector('.h-weather');
+    card.innerHTML = weather();
+    card.setAttribute('aria-label', 'Open ' + weatherForecastLabel().toLowerCase());
+  }
+
+  function forecastDayLabel(day, index) {
+    if (index === 0) return 'Today';
+    var date = day.date
+      ? new Date(day.date + 'T12:00:00')
+      : App.addDays(App.now(), day.offset == null ? index : day.offset);
+    return App.fmt.dayShort(date) + ' ' + date.getDate();
+  }
+
+  function weatherSheet() {
+    var w = App.weatherNow();
+    var hours = App.hourly(12);
+    var api = window.DASHBOARD_INTEGRATIONS;
+    var prefs = api.weatherSettings;
+    var dailyForecast = D.weather.days || [];
+    var isDaily = weatherForecastMode === 'daily';
+    var cities = prefs.cities.map(function (city, index) {
+      return '<div class="weather-city' + (index === prefs.activeCity ? ' is-active' : '') + '">' +
+        '<button class="weather-city-name" data-weather-city="' + index + '">' +
+        '<b>' + App.esc(city.name) + '</b><small>' + (index === prefs.activeCity ? 'Current forecast' : 'Show forecast') + '</small></button>' +
+        '<button class="weather-city-remove" data-weather-remove="' + index + '" aria-label="Remove ' + App.esc(city.name) + '"' + (prefs.cities.length === 1 ? ' disabled' : '') + '>×</button></div>';
+    }).join('');
+    var forecastDetails = isDaily
+      ? (dailyForecast.length ? dailyForecast.map(function (day, index) {
+        return '<div class="h-wx-day" data-weather-cond="' + App.esc(day.c) + '"><b>' + App.esc(forecastDayLabel(day, index)) + '</b>' +
+          App.icon(day.c, 26) + '<div class="h-wx-day-temps"><span>L ' + api.temperature(day.lo) + '°</span><strong>H ' +
+          api.temperature(day.hi) + '°</strong></div><small>' +
+          (day.p == null ? 'Rain chance unavailable' : day.p + '% rain') + '</small></div>';
+      }).join('') : '<p class="weather-error">Daily forecast is unavailable.</p>')
+      : hours.map(function (h) {
+        return '<div class="h-wx-hour" data-weather-cond="' + App.esc(h.c) + '"><b>' + App.esc(h.label) + '</b>' + App.icon(h.c, 24) +
+          '<span>' + api.temperature(h.t) + '°</span><small>' + h.p + '% rain</small></div>';
+      }).join('');
+    App.sheet('<div class="sheet-pad h-wx-sheet"><div class="label">' + App.icon(w.cond, 18) + App.esc(w.location || 'Local forecast') + '</div>' +
+      '<h2 class="serif sheet-h">' + (isDaily ? '7-day forecast' : 'Hourly forecast') + '</h2><p class="sheet-p h-wx-summary">' +
+      '<b>' + api.temperature(w.temp) + '°' + prefs.unit + ' · ' + App.esc(w.label) + '</b> · High ' + api.temperature(w.hi) + '° / Low ' + api.temperature(w.lo) + '° · ' + App.esc(w.summary) + '. ' + App.esc(w.advice) + '.</p>' +
+      '<div class="weather-settings"><div class="weather-setting-head"><b>Temperature</b><div class="seg"><button type="button" data-weather-unit="C"' + (prefs.unit === 'C' ? ' class="is-on"' : '') + '>°C</button><button type="button" data-weather-unit="F"' + (prefs.unit === 'F' ? ' class="is-on"' : '') + '>°F</button></div></div>' +
+      '<div class="weather-setting-head"><b>Saved cities</b><span>' + prefs.cities.length + ' / 8</span></div>' +
+      '<div class="weather-city-list">' + cities + '</div>' +
+      '<form class="weather-search" data-weather-search-form><input type="search" maxlength="100" placeholder="Add a city, e.g. Toronto" aria-label="Search for a city"><button class="btn btn--solid" type="submit">Search</button></form>' +
+      '<div class="weather-search-results" data-weather-results></div>' +
+      (api.weatherSettingsError ? '<p class="weather-error">' + App.esc(api.weatherSettingsError) + '</p>' : '') +
+      '</div><div class="weather-view-head"><div class="seg" role="group" aria-label="Forecast view">' +
+      '<button type="button" data-weather-mode="hourly" aria-pressed="' + (!isDaily) + '"' + (!isDaily ? ' class="is-on"' : '') + '>Hourly</button>' +
+      '<button type="button" data-weather-mode="daily" aria-pressed="' + isDaily + '"' + (isDaily ? ' class="is-on"' : '') + '>Daily</button>' +
+      '</div><span>' + (isDaily ? 'Next 7 days' : 'Next 12 hours') + '</span></div>' +
+      '<div class="h-wx-detail' + (isDaily ? ' is-daily' : '') + '">' + forecastDetails + '</div><div class="h-wx-source">' +
+      (api.status.weather ? 'Live forecast · refreshes automatically' : 'Sample forecast · connect a weather provider for live conditions') +
+      (api.weatherError ? ' · ' + App.esc(api.weatherError) : '') +
+      '</div></div>', {
+      cls: 'sheet--wide',
+      onMount: function (sheet) {
+        var results = [];
+        sheet.addEventListener('click', function (event) {
+          var modeButton = event.target.closest('[data-weather-mode]');
+          if (modeButton) {
+            weatherForecastMode = modeButton.dataset.weatherMode;
+            paintWeatherCard();
+            weatherSheet();
+            return;
+          }
+          var button = event.target.closest('[data-weather-unit]');
+          if (button) {
+            api.setWeatherUnit(button.dataset.weatherUnit).then(weatherSheet).catch(function (error) {
+              App.toast(App.esc(error.message), { tone: 'error', icon: 'check' });
+            });
+            return;
+          }
+          button = event.target.closest('[data-weather-city]');
+          if (button) {
+            api.selectWeatherCity(Number(button.dataset.weatherCity)).then(weatherSheet).catch(function (error) {
+              App.toast(App.esc(error.message), { tone: 'error', icon: 'check' });
+            });
+            return;
+          }
+          button = event.target.closest('[data-weather-remove]');
+          if (button) {
+            api.removeWeatherCity(Number(button.dataset.weatherRemove)).then(weatherSheet).catch(function (error) {
+              App.toast(App.esc(error.message), { tone: 'error', icon: 'check' });
+            });
+            return;
+          }
+          button = event.target.closest('[data-weather-add-result]');
+          if (button) {
+            api.addWeatherCity(results[Number(button.dataset.weatherAddResult)]).then(weatherSheet).catch(function (error) {
+              App.toast(App.esc(error.message), { tone: 'error', icon: 'check' });
+            });
+          }
+        });
+        sheet.addEventListener('submit', function (event) {
+          if (!event.target.matches('[data-weather-search-form]')) return;
+          event.preventDefault();
+          var form = event.target;
+          var button = form.querySelector('button[type="submit"]');
+          var query = form.querySelector('input').value.trim();
+          if (!query) { form.querySelector('input').focus(); return; }
+          button.disabled = true;
+          api.searchWeatherCities(query).then(function (found) {
+            results = found;
+            sheet.querySelector('[data-weather-results]').innerHTML = found.length
+              ? found.map(function (place, index) {
+                return '<button class="weather-result" type="button" data-weather-add-result="' + index + '"><span><b>' +
+                  App.esc(place.name) + '</b><small>Add to saved cities</small></span><span class="weather-result-add">+</span></button>';
+              }).join('')
+              : '<p class="weather-error">No matching cities found.</p>';
+          }).catch(function (error) {
+            sheet.querySelector('[data-weather-results]').innerHTML = '<p class="weather-error">' + App.esc(error.message) + '</p>';
+          }).then(function () { button.disabled = false; });
+        });
+      }
+    });
   }
 
   function presence() {
@@ -119,21 +245,26 @@
   }
 
   function status() {
-    var lights = D.devices.filter(function (d) { return d.type === 'light' && d.on; }).length;
-    var unlocked = D.devices.filter(function (d) { return d.type === 'lock' && !d.locked; });
-    var garage = D.devices.filter(function (d) { return d.type === 'garage'; })[0];
-    var secure = !unlocked.length && garage.state === 'closed';
-    var secText = secure ? 'All locked' : (garage.state !== 'closed' ? 'Garage open' : unlocked[0].name + ' unlocked');
-    return '<div class="label">Home</div>' +
-      '<div class="h-st-row">' + App.icon('bulb', 24) + '<b class="num">' + lights + '</b><span>lights on</span></div>' +
-      '<div class="h-st-row' + (secure ? '' : ' is-warn') + '">' + App.icon(secure ? 'lock' : 'unlock', 24) + '<span>' + secText + '</span></div>' +
-      '<div class="h-st-row">' + App.icon('thermo', 24) + '<b class="num">' + D.climate.current + '°</b><span>inside</span></div>';
+    var integrations = window.DASHBOARD_INTEGRATIONS;
+    var cameras = [];
+    if (integrations.status.homeAssistant) cameras = cameras.concat(D.homeAssistantCameras || []);
+    if (integrations.status.eufy) cameras = cameras.concat(D.eufyCameras || []);
+    var detail = cameras.length
+      ? cameras.length + (cameras.length === 1 ? ' camera connected' : ' cameras connected')
+      : integrations.eufyError
+        ? 'Camera bridge unavailable'
+        : integrations.status.eufy || integrations.status.homeAssistant
+          ? 'No cameras found'
+          : 'Connecting to camera bridge…';
+    return '<div class="label">Cameras</div>' +
+      '<div class="h-st-row">' + App.icon('camera', 24) + (cameras.length ? '<b class="num">' + cameras.length + '</b>' : '') + '<span>' + detail + '</span></div>' +
+      '<div class="h-st-row"><span>Tap to view camera status</span></div>';
   }
 
   function paint() {
     var el = V.el;
     el.querySelector('.h-clock').innerHTML = clock();
-    el.querySelector('.h-weather').innerHTML = weather();
+    paintWeatherCard();
     el.querySelector('.h-presence').innerHTML = presence();
     el.querySelector('.h-hero-slot').innerHTML = hero();
     el.querySelector('.h-lanes').innerHTML = lanes();
@@ -153,7 +284,7 @@
       if (!el.firstChild) {
         el.innerHTML = '<div class="home">' +
           '<div class="h-clock" data-go="calendar"></div>' +
-          '<div class="h-weather"></div>' +
+          '<button class="h-weather" data-weather aria-label="Open hourly forecast"></button>' +
           '<div class="h-presence"></div>' +
           '<div class="h-main"><div class="h-hero-slot"></div><div class="h-lanes" ></div></div>' +
           '<div class="h-side">' +
@@ -164,6 +295,7 @@
         el.addEventListener('click', function (e) {
           var ev = e.target.closest('[data-ev]');
           if (ev) { App.eventSheet(App.findEvent(ev.dataset.ev)); return; }
+          if (e.target.closest('[data-weather]')) { weatherSheet(); return; }
           var g = e.target.closest('[data-go]');
           if (g) App.go(g.dataset.go);
         });
@@ -180,7 +312,10 @@
     if (!V.el || !V.el.firstChild) return;
     V.el.querySelector('.h-clock').innerHTML = clock();
     V.el.querySelector('.h-hero-slot').innerHTML = hero();
-    if (n.getMinutes() === 0) { V.el.querySelector('.h-weather').innerHTML = weather(); V.el.querySelector('.h-lanes').innerHTML = lanes(); }
+    if (n.getMinutes() === 0) {
+      paintWeatherCard();
+      V.el.querySelector('.h-lanes').innerHTML = lanes();
+    }
   });
   App.on('data', function () { if (App.current === 'home') paint(); });
 })();

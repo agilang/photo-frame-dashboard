@@ -225,7 +225,7 @@
     if ((t = e.target.closest('[data-more]'))) return moreSheet(t.dataset.more.split(','));
     if ((t = e.target.closest('[data-nav]'))) return nav(+t.dataset.nav);
     if ((t = e.target.closest('[data-today]'))) { V.date = App.dayStart(App.now()); if (V.mode === 'month') V.date.setDate(1); V.scroll = null; return render(); }
-    if ((t = e.target.closest('[data-mode]'))) {
+    if ((t = e.target.closest('.cal [data-mode]'))) {
       V.mode = t.dataset.mode;
       if (V.mode === 'month') V.date = new Date(V.date.getFullYear(), V.date.getMonth(), 1);
       V.scroll = null;
@@ -326,7 +326,7 @@
           });
           if (t.hasAttribute('data-save')) {
             var title = input.value.trim() || 'New event';
-            var who = st.who.length ? st.who.slice() : ['jordan'];
+            var who = st.who.length ? st.who.slice() : ['parvathi'];
             var start = App.addDays(App.dayStart(now), st.day), p = st.time.split(':');
             start.setHours(+p[0], +p[1]);
             var e = { id: D._eid(), title: title, people: who, start: start, end: new Date(+start + st.dur * 60000) };
