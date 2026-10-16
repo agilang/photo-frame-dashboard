@@ -12,6 +12,7 @@ import './views/photos.js';
 import './views/control.js';
 import './views/agents.js';
 import './views/stocks.js';
+import './views/music.js';
 import './views/ambient.js';
 import './integrations.js';
 import './diag.js';
