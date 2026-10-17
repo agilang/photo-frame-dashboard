@@ -229,7 +229,7 @@
     requestAnimationFrame(function () {
       changeQueued = false;
       App.emit('data');
-      App.rerender();
+      if (App.current !== 'home' && App.current !== 'control' && App.current !== 'music') App.rerender();
     });
   }
 
