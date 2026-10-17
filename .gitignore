@@ -26,9 +26,8 @@ scripts/si006-webview-overlay/build/
 /dashboard/.dev.vars
 /dashboard/.dev.vars.*
 !/dashboard/.dev.vars.example
-/dashboard/eufy-bridge/.env
-/dashboard/eufy-bridge/.eufy-session.json
-/dashboard/eufy-bridge/.eufy-captcha.png
-/dashboard/eufy-bridge/node_modules/
 /dashboard/public/photos/*
 !/dashboard/public/photos/manifest.json
+
+# Eufy live bridge: account login, session/push tokens, device serials, camera snapshots.
+/dashboard/eufy-live-bridge/

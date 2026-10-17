@@ -137,7 +137,7 @@ commit them.
    The Tasks view can add and complete Google Tasks. Chores remain available locally; use **Sync
    chores** in the Google Tasks view to create missing Google Tasks for them. Linked chore checkoffs
    update the matching Google Task. Use the Google Tasks view to complete standalone tasks.
-- **AI chat:** the Agents view uses Cloudflare Workers AI through the Worker's `AI` binding; no
+- **AI chat:** the Assistant view uses Cloudflare Workers AI through the Worker's `AI` binding; no
    provider API key is required. The default is `@cf/meta/llama-3.1-8b-instruct-fp8-fast`; override it
    with `WORKERS_AI_MODEL`. Cloudflare's current Workers Free allowance is 10,000 Neurons per day
    across Workers AI, with model-dependent consumption; calls fail after the allowance on the free
@@ -154,8 +154,8 @@ commit them.
    with go2rtc for live playback and snapshots. The dashboard connects directly to this bridge from
    the photo frame, so serve the Worker locally on the home network; a Cloudflare-hosted Worker
    cannot reach a private LAN address. Follow [the Eufy live-video setup](docs/eufy-live-video.md).
-   The older `dashboard/eufy-bridge/` snapshot-only server is not used by this setup. Do not run both
-   bridges on one Eufy account, and never expose the bridge or go2rtc ports to the public internet.
+   Run only this one bridge per Eufy account, and never expose the bridge or go2rtc ports to the
+   public internet.
 - **Weather:** the dashboard requests current and hourly forecast data from
    [Open-Meteo](https://open-meteo.com/). Tap the weather card to switch between hourly and 7-day
    forecasts, change Celsius/Fahrenheit, search for cities, and choose the active forecast. These
@@ -202,9 +202,12 @@ commit them.
    command in one sentence. Wake listening continues across dashboard sections while Home HQ is
    visible and the screen is on; its setting is saved in this browser and can be switched off on the
    Timers page. It uses the microphone continuously and speech recognition may use the browser
-   provider's online service. Listening pauses while the page is hidden and may need microphone
-   permission or network access to resume. It cannot wake the screen while the display is off, or
-   work when the browser or device is fully closed or powered off.
+   provider's online service. If listening pauses or the dashboard is reopened, tap **Resume wake
+   phrase**; browser speech recognition can stop or require a user gesture to restart. Listening
+   pauses while the page is hidden and may need microphone permission or network access to resume.
+   It cannot wake the screen while the display is off, or work when the browser or device is fully
+   closed or powered off. Active timer countdowns also appear on Today and the dark Night clock.
+   The alarm repeats a louder three-note chime; device media volume controls its audible level.
 - **Night display:** the dim dashboard palette is applied when night dashboard mode is selected.
    It uses dark slate surfaces and softened teal highlights without inverting the colors of photos
    or camera video. The separate night clock remains available for a darker, glanceable screen.
@@ -329,6 +332,15 @@ trusting it, and remember that a past approval is not permission for a new write
 
 ## Credits and services
 
+- **Original project:** this is a fork of [wesbos/photo-frame-dashboard](https://github.com/wesbos/photo-frame-dashboard)
+  by [Wes Bos](https://github.com/wesbos). The Home HQ dashboard, the frame unlock research in
+  `docs/`, and the [community builds](docs/community-builds.md) come from his work and the
+  contributors listed in the [original repository](https://github.com/wesbos/photo-frame-dashboard/graphs/contributors).
+  Fork changes (modern restyle, timers and voice commands, lock-screen timer countdown, Eufy live
+  bridge setup) are by [Agilan Gowthaman](https://github.com/agilang).
+- **Inspiration:** the family-calendar-on-a-photo-frame idea follows commercial wall displays such as
+  [Skylight Calendar](https://www.skylightframe.com/), rebuilt here as an open, self-hosted dashboard.
+
 - [Open-Meteo](https://open-meteo.com/) provides weather forecasts and city geocoding.
 - [Finnhub](https://finnhub.io/) provides stock quotes; availability, delay, and rate limits depend
   on the account and exchange.
@@ -337,7 +349,7 @@ trusting it, and remember that a past approval is not permission for a new write
 - [Google APIs](https://developers.google.com/) provide the optional Calendar and Tasks integration.
 - [ha-eufy-sdk-bridge](https://github.com/mega-yfue/ha-eufy-sdk-bridge) and
   [go2rtc](https://github.com/AlexxIT/go2rtc) enable optional local-network Eufy camera playback.
-- [Manrope](https://fonts.google.com/specimen/Manrope) is loaded from Google Fonts.
+- [Plus Jakarta Sans](https://fonts.google.com/specimen/Plus+Jakarta+Sans) is loaded from Google Fonts.
 - The optional music screen embeds media using the official [YouTube](https://www.youtube.com/)
   and [Spotify](https://open.spotify.com/) players. Playback and account restrictions are set by
   those providers.

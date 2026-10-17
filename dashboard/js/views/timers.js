@@ -115,26 +115,42 @@
     }
   }
 
+  function timerSummary() {
+    var active = timers.filter(function (timer) { return !timer.finished; })
+      .sort(function (a, b) { return a.endAt - b.endAt; });
+    return {
+      count: active.length,
+      name: active.length ? active[0].name : '',
+      remaining: active.length ? Math.max(0, active[0].endAt - Date.now()) : 0
+    };
+  }
+
+  App.timerSummary = timerSummary;
+
   function beep() {
     if (!audioContext || audioContext.state !== 'running') return;
-    var oscillator = audioContext.createOscillator();
-    var gain = audioContext.createGain();
-    oscillator.type = 'sine';
-    oscillator.frequency.value = 880;
-    gain.gain.setValueAtTime(0.001, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.16, audioContext.currentTime + 0.025);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.45);
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.46);
+    [784, 988, 1175].forEach(function (frequency, index) {
+      var startAt = audioContext.currentTime + index * 0.27;
+      var oscillator = audioContext.createOscillator();
+      var gain = audioContext.createGain();
+      oscillator.type = 'triangle';
+      oscillator.frequency.value = frequency;
+      gain.gain.setValueAtTime(0.001, startAt);
+      gain.gain.exponentialRampToValueAtTime(0.72, startAt + 0.02);
+      gain.gain.setValueAtTime(0.72, startAt + 0.14);
+      gain.gain.exponentialRampToValueAtTime(0.001, startAt + 0.25);
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start(startAt);
+      oscillator.stop(startAt + 0.26);
+    });
   }
 
   function syncAlarm() {
     var hasUnacknowledged = timers.some(function (timer) { return timer.finished && !timer.acknowledged; });
     if (hasUnacknowledged && !alarmInterval) {
       beep();
-      alarmInterval = setInterval(beep, 1400);
+      alarmInterval = setInterval(beep, 1800);
     } else if (!hasUnacknowledged && alarmInterval) {
       clearInterval(alarmInterval);
       alarmInterval = null;
@@ -226,7 +242,7 @@
     wakeRestartTimer = setTimeout(function () {
       wakeRestartTimer = null;
       startWakeListening();
-    }, 1200);
+    }, 350);
   }
 
   function handleWakePhrase(text) {
@@ -280,7 +296,7 @@
       recognition = instance;
       recognitionMode = mode;
       instance.lang = 'en-US';
-      instance.continuous = mode === 'wake';
+      instance.continuous = false;
       instance.interimResults = false;
       instance.onstart = function () {
         if (recognition !== instance) return;
@@ -307,6 +323,10 @@
               errorText += ' The wake preference could not be cleared.';
             }
           }
+        } else if (mode === 'wake' && (event.error === 'no-speech' || event.error === 'network')) {
+          statusText = event.error === 'no-speech'
+            ? 'Still listening for “Hey Home”…'
+            : 'Speech service disconnected; trying to reconnect…';
         } else {
           errorText = 'Voice input failed (' + event.error + '). Try again or use the command field.';
         }
@@ -397,10 +417,33 @@
     }
     var wake = viewEl.querySelector('[data-timer-wake]');
     if (wake) {
-      wake.setAttribute('aria-pressed', wakeEnabled ? 'true' : 'false');
-      wake.textContent = wakeEnabled ? 'Wake phrase on' : 'Enable wake phrase';
-      wake.classList.toggle('is-enabled', wakeEnabled);
+      wake.setAttribute('aria-pressed', wakeEnabled && listening ? 'true' : 'false');
+      wake.textContent = !wakeEnabled ? 'Enable wake phrase' :
+        (listening ? 'Wake phrase on · tap to pause' : 'Resume wake phrase');
+      wake.classList.toggle('is-enabled', wakeEnabled && listening);
     }
+  }
+
+  function paintTimerSummary() {
+    if (!App.timerSummary) return;
+    var summary = timerSummary();
+    var homeSummary = document.querySelector('[data-home-timer-summary]');
+    if (homeSummary) {
+      homeSummary.hidden = summary.count === 0;
+      homeSummary.textContent = summary.count
+        ? summary.count + (summary.count === 1 ? ' timer · ' : ' timers · ') + formatDuration(summary.remaining) + ' left'
+        : '';
+      homeSummary.setAttribute('aria-label', summary.count
+        ? summary.count + ' active timers, next is ' + formatDuration(summary.remaining)
+        : '');
+    }
+    var text = summary.count
+      ? '⏱ ' + (summary.count > 1 ? summary.count + ' timers · next ' : (summary.name ? summary.name + ' · ' : '')) + formatDuration(summary.remaining)
+      : '';
+    document.querySelectorAll('[data-lock-timer-summary]').forEach(function (el) {
+      el.hidden = summary.count === 0;
+      el.textContent = text;
+    });
   }
 
   function paintList() {
@@ -423,7 +466,7 @@
         '<button type="button" class="timer-remove" data-timer-remove="' + App.esc(timer.id) + '" aria-label="Dismiss ' +
         App.esc(timer.name) + '">' + App.icon('x', 21) + '</button></article>';
     }).join('') : '<div class="timer-empty"><span class="timer-empty-icon">' + App.icon('clock', 36) +
-      '</span><h2>No timers yet</h2><p>Tap the microphone and say “Set a timer for 5 minutes.” You can start multiple timers in one command.</p></div>';
+      '</span><h2>No timers yet</h2><p>Say “Hey Home, set a timer for 5 minutes,” enable the wake phrase, or enter a timer command below.</p></div>';
   }
 
   function paint() {
@@ -438,8 +481,9 @@
       ((!speechApi() || wakeEnabled) ? ' disabled' : '') + '>' +
       (wakeEnabled ? 'Wake phrase is on' : (listening ? 'Stop listening' : 'Speak timers')) + '</button>' +
       '<button type="button" class="timer-wake-button' + (wakeEnabled ? ' is-enabled' : '') +
-      '" data-timer-wake aria-pressed="' + (wakeEnabled ? 'true' : 'false') + '"' +
-      (!speechApi() ? ' disabled' : '') + '>' + (wakeEnabled ? 'Wake phrase on' : 'Enable wake phrase') + '</button>' +
+      '" data-timer-wake aria-pressed="' + (wakeEnabled && listening ? 'true' : 'false') + '"' +
+      (!speechApi() ? ' disabled' : '') + '>' +
+      (!wakeEnabled ? 'Enable wake phrase' : (listening ? 'Wake phrase on · tap to pause' : 'Resume wake phrase')) + '</button>' +
       '<p class="timer-example">Say “Hey Home,” then “set a timer for 5 minutes.”<br>' +
       'Or say “Hey Home, set timers for 5 and 10 minutes.”</p>' +
       '<div class="timer-status" data-timer-status>' + App.esc(statusText) + '</div>' +
@@ -458,6 +502,7 @@
       '<p class="timers-footnote">Timers run while Home HQ is open. Enable the wake phrase to listen for “Hey Home” while the screen is on; this keeps the microphone active and may use an online speech service. Screen-off wake listening is not supported.</p>' +
       '</div>';
     paintList();
+    paintTimerSummary();
   }
 
   function tick() {
@@ -484,7 +529,9 @@
         el.addEventListener('click', function (event) {
           var wake = event.target.closest('[data-timer-wake]');
           if (wake) {
-            setWakeEnabled(!wakeEnabled);
+            if (wakeEnabled && listening && recognition) setWakeEnabled(false);
+            else if (wakeEnabled) startWakeListening();
+            else setWakeEnabled(true);
             return;
           }
           var voice = event.target.closest('[data-timer-voice]');
@@ -551,7 +598,8 @@
       }
       if (recognition && recognitionMode === 'wake') recognition.stop();
     } else if (wakeEnabled) {
-      scheduleWakeRestart();
+      statusText = 'Tap “Resume wake phrase” to restart listening.';
+      paintStatus();
     }
   });
 
@@ -568,8 +616,10 @@
   }
 
   App.on('second', tick);
+  App.on('second', paintTimerSummary);
+  App.on('mode', paintTimerSummary);
   App.on('ready', function () {
     dueOnLoad();
-    if (wakeEnabled) startWakeListening();
+    if (wakeEnabled) statusText = 'Wake phrase saved. Tap “Resume wake phrase” to start listening.';
   });
 })();

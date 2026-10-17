@@ -26,8 +26,8 @@
   --c-ink: #FFFFFF;
 
   /* type */
-  --sans: 'Manrope', 'Avenir Next', 'Roboto', system-ui, sans-serif;
-  --serif: 'Manrope', 'Avenir Next', 'Roboto', system-ui, sans-serif;
+  --sans: 'Plus Jakarta Sans', 'Avenir Next', 'Roboto', system-ui, sans-serif;
+  --serif: 'Plus Jakarta Sans', 'Avenir Next', 'Roboto', system-ui, sans-serif;
   --fs-clock: 150px;
   --fs-hero: 76px;
   --fs-xl: 56px;
@@ -38,8 +38,8 @@
   --fs-min: 14px;
 
   /* shape + space */
-  --r: 22px;
-  --r-s: 15px;
+  --r: 26px;
+  --r-s: 18px;
   --gap: 18px;
   --pad: 24px;
   --tap: 64px;

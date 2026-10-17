@@ -14,7 +14,8 @@
     var greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
     return '<div class="h-greeting"><span>HOME HQ</span><b>' + greeting + '</b></div>' +
       '<div class="h-time num">' + App.fmt.time(n, false) + '<span class="h-ampm">' + App.fmt.ampm(n) + '</span></div>' +
-      '<div class="h-date"><b>' + App.fmt.day(n) + '</b> ' + App.fmt.month(n) + ' ' + n.getDate() + '</div>';
+      '<div class="h-date"><b>' + App.fmt.day(n) + '</b> ' + App.fmt.month(n) + ' ' + n.getDate() + '</div>' +
+      '<div class="h-timer-summary" data-home-timer-summary hidden></div>';
   }
 
   function weather() {

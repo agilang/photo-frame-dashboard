@@ -125,10 +125,12 @@
   App.weatherNow = function () {
     var W = D.weather, h = App.weatherHour();
     var rainAt = -1;
-    for (var i = h; i < 24; i++) if (W.p[i] >= 50) { rainAt = i; break; }
+    // Rain by forecast chance (>=40%) or by the hour's own weather code
+    function wet(i) { return W.p[i] >= 40 || W.c[i] === 'rain'; }
+    for (var i = h; i < 24; i++) if (wet(i)) { rainAt = i; break; }
     var summary, advice;
     if (rainAt === h) {
-      var stop = h; while (stop < 24 && W.p[stop] >= 50) stop++;
+      var stop = h; while (stop < 24 && wet(stop)) stop++;
       summary = 'Rain until ' + App.fmt.hour(new Date(2000, 0, 1, stop));
       advice = 'Umbrella weather';
     } else if (rainAt > -1) {
@@ -136,8 +138,15 @@
       var soccer = App.timedOn(App.now()).filter(function (e) { return /soccer/i.test(e.title) && e.start > App.now(); })[0];
       advice = soccer ? 'Pack a rain jacket for soccer' : 'Grab a rain jacket';
     } else {
-      summary = W.t[h] < 12 ? 'Clear and cool' : 'Dry all day';
-      advice = W.t[h] < 12 ? 'Jacket weather' : 'Light layers';
+      var t = W.t[h], hi = W.hi, c = W.c[h];
+      var rest = [];
+      for (var j = h; j < 24; j++) rest.push(W.c[j]);
+      var gloomy = rest.filter(function (x) { return x === 'cloud'; }).length > rest.length / 2;
+      summary = (c === 'sun' || c === 'moon') ? 'Clear skies' : c === 'partly' ? 'Partly cloudy' : gloomy || c === 'cloud' ? 'Cloudy, staying dry' : 'No rain expected';
+      if (hi >= 30) { summary = 'Hot today'; advice = 'Stay hydrated'; }
+      else if (t < 8) advice = 'Bundle up';
+      else if (t < 14) advice = 'Jacket weather';
+      else advice = c === 'sun' ? 'Light layers, sunscreen' : 'Light layers';
     }
     var labels = { sun: 'Sunny', moon: 'Clear', partly: 'Partly cloudy', cloud: 'Overcast', rain: 'Rain' };
     return { temp: W.t[h], cond: W.c[h], label: labels[W.c[h]], hi: W.hi, lo: W.lo, location: W.location, summary: summary, advice: advice, hour: h };

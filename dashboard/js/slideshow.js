@@ -142,7 +142,7 @@
   S.next = function () {
     var s = this.pick();
     if (!s) return;
-    if (this.current) this.history.push(this.current);
+    if (this.current) { this.history.push(this.current); if (this.history.length > 12) this.history.shift(); }
     this.render(s);
     this.restart();
   };
@@ -158,7 +158,12 @@
     this.timer = setInterval(function () { self.next(); }, this.o.interval);
   };
   S.start = function () { if (!this.current) this.next(); else this.restart(); };
-  S.stop = function () { clearInterval(this.timer); this.timer = null; };
+  S.stop = function () {
+    clearInterval(this.timer); this.timer = null;
+    // Drop decoded images while hidden to free RAM on the frame
+    this.el.textContent = '';
+    this.current = null;
+  };
 
   App.on('photos', function () {
     (App.slideshows || []).forEach(function (show) {
