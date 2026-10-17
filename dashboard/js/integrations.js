@@ -40,6 +40,9 @@
   var api = window.DASHBOARD_INTEGRATIONS = {
     status: state,
     tasks: [],
+    calendarError: '',
+    calendarSyncing: false,
+    calendarSyncedAt: null,
     weatherSettings: weatherSettings,
     weatherSettingsError: weatherSettingsError,
     weatherError: '',
@@ -104,6 +107,13 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: messages })
       });
+    },
+    searchYouTube: function (query) {
+      var search = (query || '').trim();
+      if (search.length < 2 || search.length > 100) {
+        return Promise.reject(new Error('Enter a song or artist between 2 and 100 characters.'));
+      }
+      return request('/api/music/search?q=' + encodeURIComponent(search));
     },
     temperature: function (celsius) {
       return weatherSettings.unit === 'F' ? Math.round(celsius * 9 / 5 + 32) : Math.round(celsius);
@@ -212,9 +222,15 @@
     });
   }
 
+  var changeQueued = false;
   function changed() {
-    App.emit('data');
-    App.rerender();
+    if (changeQueued) return;
+    changeQueued = true;
+    requestAnimationFrame(function () {
+      changeQueued = false;
+      App.emit('data');
+      App.rerender();
+    });
   }
 
   function applyLinkedChores() {
@@ -225,18 +241,35 @@
     });
   }
 
+  var calendarSyncPromise = null;
   function syncCalendar() {
+    if (calendarSyncPromise) return calendarSyncPromise;
+    api.calendarSyncing = true;
+    api.calendarError = '';
+    changed();
     var from = new Date(App.now().getTime() - 30 * 86400000);
     var to = new Date(App.now().getTime() + 90 * 86400000);
     var query = new URLSearchParams({ timeMin: from.toISOString(), timeMax: to.toISOString() });
-    return request('/api/google/calendar?' + query).then(function (result) {
+    calendarSyncPromise = request('/api/google/calendar?' + query).then(function (result) {
       D.events = (result.events || []).map(function (event) {
         return Object.assign({}, event, { start: new Date(event.start), end: new Date(event.end) });
       });
       state.calendar = true;
+      api.calendarSyncedAt = new Date();
+      return true;
+    }).catch(function (error) {
+      state.calendar = false;
+      api.calendarError = error.message || 'Calendar sync failed';
+      return false;
+    }).then(function (success) {
+      api.calendarSyncing = false;
+      calendarSyncPromise = null;
       changed();
-    }).catch(function () { state.calendar = false; });
+      return success;
+    });
+    return calendarSyncPromise;
   }
+  api.refreshCalendar = syncCalendar;
 
   function syncTasks() {
     return request('/api/google/tasks').then(function (result) {
@@ -493,5 +526,8 @@
     setInterval(function () { syncCalendar(); syncTasks(); }, 5 * 60 * 1000);
     setInterval(syncEufyCameras, 5 * 60 * 1000);
     setInterval(syncWeather, 15 * 60 * 1000);
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && App.current === 'calendar') syncCalendar();
   });
 })();

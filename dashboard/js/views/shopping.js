@@ -3,6 +3,34 @@
   'use strict';
   var D = window.DATA;
   var V = { el: null, store: 'all', query: '', drawer: false, pending: {}, flash: null };
+  var STORAGE_KEY = 'home-hq-groceries-v1';
+
+  function loadGroceries() {
+    try {
+      var saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return;
+      var groceries = JSON.parse(saved);
+      if (!Array.isArray(groceries) || groceries.some(function (g) {
+        return !g || typeof g.id !== 'string' || typeof g.name !== 'string' || !g.name.trim() ||
+          typeof g.cat !== 'string' || !Number.isInteger(g.qty) || g.qty < 1 ||
+          !D.stores.some(function (store) { return store.id === g.store; }) ||
+          typeof g.done !== 'boolean' || typeof g.note !== 'string';
+      })) throw new Error('Saved shopping list is invalid');
+      D.groceries = groceries;
+    } catch (error) {
+      App.toast('Saved shopping list could not be loaded. The sample list is unchanged.', { tone: 'error', icon: 'cart' });
+    }
+  }
+
+  function saveGroceries() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(D.groceries));
+      return true;
+    } catch (error) {
+      App.toast('Couldn’t save the shopping list on this device.', { tone: 'error', icon: 'cart' });
+      return false;
+    }
+  }
 
   function open() { return D.groceries.filter(function (g) { return !g.done && (V.store === 'all' || g.store === V.store); }); }
   function done() { return D.groceries.filter(function (g) { return g.done && (V.store === 'all' || g.store === V.store); }); }
@@ -157,6 +185,7 @@
       insertRow(g);
     }
     var hadQuery = !!V.query.trim();
+    saveGroceries();
     V.query = '';
     var input = V.el.querySelector('.s-input');
     if (input) input.value = '';
@@ -174,6 +203,7 @@
       if (!V.pending[g.id]) return;
       delete V.pending[g.id];
       g.done = true;
+      saveGroceries();
       removeRow(g);
       refreshSuggestFor(g);
       App.emit('data');
@@ -184,6 +214,7 @@
         var wasDone = g.done;
         delete V.pending[g.id];
         g.done = false;
+        saveGroceries();
         if (wasDone) paintList();
         else { var r = V.el.querySelector('.s-list [data-id="' + g.id + '"]'); if (r) r.classList.remove('is-checking'); }
         refreshSuggestFor(g);
@@ -203,6 +234,7 @@
     if ((t = e.target.closest('[data-qty]'))) {
       var q = D.groceries.filter(function (x) { return x.id === t.dataset.id; })[0];
       q.qty = Math.max(1, q.qty + +t.dataset.qty);
+      saveGroceries();
       t.parentNode.querySelector('.num').textContent = q.qty;
       refreshSuggestFor(q);
       return;
@@ -212,23 +244,24 @@
     if ((t = e.target.closest('[data-drawer]'))) { V.drawer = !V.drawer; return paintList(); }
     if ((t = e.target.closest('[data-revive]'))) {
       var r = D.groceries.filter(function (x) { return x.id === t.dataset.revive; })[0];
-      r.done = false; paintList(); paintSuggest(); App.emit('data');
+      r.done = false; saveGroceries(); paintList(); paintSuggest(); App.emit('data');
       return App.toast('Added back <b>' + App.esc(r.name) + '</b>', { icon: 'cart', ms: 2500 });
     }
     if ((t = e.target.closest('[data-clear]'))) {
       var gone = done();
       D.groceries = D.groceries.filter(function (x) { return gone.indexOf(x) < 0; });
+      saveGroceries();
       V.drawer = false;
       paintList();
       App.toast('Cleared ' + gone.length + ' items', {
-        icon: 'check', undo: function () { D.groceries = D.groceries.concat(gone); paintList(); }
+        icon: 'check', undo: function () { D.groceries = D.groceries.concat(gone); saveGroceries(); paintList(); }
       });
     }
   }
 
   App.register('shopping', {
     show: function (el) {
-      if (!V.el) { V.el = el; el.addEventListener('click', onClick); }
+      if (!V.el) { V.el = el; loadGroceries(); el.addEventListener('click', onClick); }
       render();
     }
   });

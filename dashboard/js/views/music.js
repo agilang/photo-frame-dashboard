@@ -5,6 +5,10 @@
   var viewEl = null;
   var savedUrl = '';
   var errorText = '';
+  var searchQuery = '';
+  var searchResults = [];
+  var searchError = '';
+  var searching = false;
 
   try {
     savedUrl = localStorage.getItem(STORAGE_KEY) || '';
@@ -95,11 +99,55 @@
     if (frame.src !== embed.url) frame.src = embed.url;
   }
 
+  function renderSearchResults() {
+    var resultsEl = viewEl.querySelector('[data-music-results]');
+    if (!resultsEl) return;
+    resultsEl.innerHTML = searching
+      ? '<p class="music-search-message">Searching YouTube…</p>'
+      : searchError
+        ? '<p class="music-search-message is-error" role="alert">' + App.esc(searchError) + '</p>'
+        : searchResults.length
+          ? searchResults.map(function (result) {
+            return '<button class="music-search-result" type="button" data-video-id="' + encodeURIComponent(result.id) + '">' +
+              '<span class="music-search-result-copy"><b>' + App.esc(result.title) + '</b><small>' + App.esc(result.channel || 'YouTube') + '</small></span>' +
+              '<span class="music-search-result-action">Play</span></button>';
+          }).join('')
+          : searchQuery ? '<p class="music-search-message">No videos found. Try another search.</p>' : '';
+  }
+
+  function searchYouTube(query, button) {
+    searchQuery = query.trim();
+    searchError = '';
+    searchResults = [];
+    searching = true;
+    if (button) button.disabled = true;
+    renderSearchResults();
+    window.DASHBOARD_INTEGRATIONS.searchYouTube(searchQuery).then(function (result) {
+      searchResults = (result.results || []).filter(function (item) {
+        return item && typeof item.id === 'string' && /^[A-Za-z0-9_-]{6,}$/.test(item.id) &&
+          typeof item.title === 'string';
+      });
+    }).catch(function (error) {
+      searchError = error.message || 'YouTube search failed. Try again.';
+    }).then(function () {
+      searching = false;
+      var searchButton = viewEl.querySelector('[data-music-search-submit]');
+      if (searchButton) searchButton.disabled = false;
+      renderSearchResults();
+    });
+  }
+
   function render() {
     viewEl.innerHTML = '<div class="music-view">' +
       '<header class="music-head"><div><div class="label">Listen together</div><h1>Music</h1></div>' +
-      '<span class="music-free-badge">Free embeds · no API key</span></header>' +
-      '<form class="music-form" data-music-form><label for="music-url">YouTube or Spotify link</label>' +
+      '<span class="music-free-badge">YouTube search + Spotify links</span></header>' +
+      '<section class="music-search"><form class="music-search-form" data-music-search-form>' +
+      '<label for="music-search-query">Search by song or artist</label><div class="music-form-row">' +
+      '<input id="music-search-query" name="musicSearch" type="search" maxlength="100" autocomplete="off" placeholder="Try an artist, song, or playlist">' +
+      '<button class="btn btn--solid" type="submit" data-music-search-submit>Search</button></div></form>' +
+      '<div class="music-search-results" data-music-results aria-live="polite"></div>' +
+      '<p class="music-search-note">Search needs a YouTube Data API key configured on the dashboard Worker. Or paste a link below.</p></section>' +
+      '<form class="music-form" data-music-form><label for="music-url">Or paste a YouTube or Spotify link</label>' +
       '<div class="music-form-row"><input id="music-url" name="musicUrl" type="url" inputmode="url" autocomplete="url" placeholder="Paste a video, playlist, track, or album link" aria-label="YouTube or Spotify URL" value="' +
       App.esc(savedUrl) + '"><button class="btn btn--solid" type="submit">' + (savedUrl ? 'Load player' : 'Add player') + '</button>' +
       (savedUrl ? '<button class="btn btn--ghost" type="button" data-music-clear>Clear</button>' : '') + '</div></form>' +
@@ -107,10 +155,13 @@
       '<section class="music-player" data-music-player hidden><div class="music-player-head"><span data-music-provider></span><span>Playback starts when you press play</span></div>' +
       '<iframe title="Embedded music player" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></section>' +
       '<section class="music-empty" data-music-empty><div class="music-empty-icon">' + App.icon('music', 42) + '</div>' +
-      '<h2>Your music, on the frame</h2><p>Paste a YouTube video or playlist, or a Spotify track, album, playlist, artist, or show. The link is saved only in this browser.</p></section>' +
+      '<h2>Your music, on the frame</h2><p>Search for a YouTube song or artist above and tap a result. For Spotify, paste a track, album, playlist, artist, or show link. Your selection is saved only in this browser.</p></section>' +
       '<p class="music-note">Free playback depends on the provider, account, and content. YouTube may show ads; Spotify may require sign-in and may limit playback. Use the embedded controls to start playback—autoplay is disabled.</p>' +
       '</div>';
     renderPlayer();
+    var searchInput = viewEl.querySelector('[name="musicSearch"]');
+    searchInput.value = searchQuery;
+    renderSearchResults();
   }
 
   App.register('music', {
@@ -119,6 +170,21 @@
       if (!el.dataset.musicBound) {
         el.dataset.musicBound = 'true';
         el.addEventListener('submit', function (event) {
+          if (event.target.matches('[data-music-search-form]')) {
+            event.preventDefault();
+            var searchInput = event.target.querySelector('[name="musicSearch"]');
+            var query = searchInput.value.trim();
+            if (query.length < 2 || query.length > 100) {
+              searchError = 'Enter at least 2 characters to search.';
+              searchQuery = query;
+              searchResults = [];
+              renderSearchResults();
+              searchInput.focus();
+              return;
+            }
+            searchYouTube(query, event.target.querySelector('[data-music-search-submit]'));
+            return;
+          }
           if (!event.target.matches('[data-music-form]')) return;
           event.preventDefault();
           var input = event.target.querySelector('input[name="musicUrl"]');
@@ -134,6 +200,19 @@
           else render();
         });
         el.addEventListener('click', function (event) {
+          var result = event.target.closest('[data-video-id]');
+          if (result) {
+            var videoId = decodeURIComponent(result.dataset.videoId);
+            if (!/^[A-Za-z0-9_-]{6,}$/.test(videoId)) return;
+            var source = 'https://www.youtube.com/watch?v=' + encodeURIComponent(videoId);
+            if (save(source)) {
+              searchQuery = '';
+              searchResults = [];
+              searchError = '';
+              render();
+            } else render();
+            return;
+          }
           if (!event.target.closest('[data-music-clear]')) return;
           try {
             localStorage.removeItem(STORAGE_KEY);

@@ -191,12 +191,18 @@
   function header() {
     var t = title();
     var isToday = V.mode === 'month' ? (V.date.getMonth() === App.now().getMonth()) : App.sameDay(V.date, App.now());
+    var integrations = window.DASHBOARD_INTEGRATIONS;
+    var syncLabel = integrations.calendarSyncing ? 'Syncing Google Calendar…' :
+      integrations.calendarError ? 'Calendar sync failed · tap to retry' :
+      integrations.calendarSyncedAt ? 'Google Calendar · updated ' + App.fmt.time(integrations.calendarSyncedAt, false) :
+      integrations.status.calendar ? 'Google Calendar · synced' : 'Google not connected · local only';
     return '<header class="cal-head">' +
       '<button class="icon-btn" data-nav="-1" aria-label="Previous">' + App.icon('left', 24) + '</button>' +
-      '<div class="cal-title"><div class="serif">' + t.t + '</div><div class="label">' + t.k + '</div><div class="label cal-source">' + (window.DASHBOARD_INTEGRATIONS.status.calendar ? 'Google Calendar · synced' : 'Google not connected · local only') + '</div></div>' +
+      '<div class="cal-title"><div class="serif">' + t.t + '</div><div class="label">' + t.k + '</div><div class="label cal-source">' + App.esc(syncLabel) + '</div></div>' +
       '<button class="icon-btn" data-nav="1" aria-label="Next">' + App.icon('right', 24) + '</button>' +
       '<button class="btn btn--ghost' + (isToday ? ' is-hidden' : '') + '" data-today>Today</button>' +
       '<div class="seg">' + MODES.map(function (m) { return '<button class="' + (V.mode === m[0] ? 'is-on' : '') + '" data-mode="' + m[0] + '">' + m[1] + '</button>'; }).join('') + '</div>' +
+      '<button class="btn btn--ghost" data-calendar-refresh' + (integrations.calendarSyncing ? ' disabled' : '') + ' aria-label="Refresh Google Calendar">' + (integrations.calendarSyncing ? 'Syncing…' : 'Refresh') + '</button>' +
       '<button class="fab" data-add aria-label="Add event">' + App.icon('plus', 26) + '</button>' +
       '</header>';
   }
@@ -225,6 +231,13 @@
     if ((t = e.target.closest('[data-more]'))) return moreSheet(t.dataset.more.split(','));
     if ((t = e.target.closest('[data-nav]'))) return nav(+t.dataset.nav);
     if ((t = e.target.closest('[data-today]'))) { V.date = App.dayStart(App.now()); if (V.mode === 'month') V.date.setDate(1); V.scroll = null; return render(); }
+    if ((t = e.target.closest('[data-calendar-refresh]'))) {
+      window.DASHBOARD_INTEGRATIONS.refreshCalendar().then(function (success) {
+        if (success) App.toast('Google Calendar is up to date', { icon: 'calendar', ms: 2500 });
+        else App.toast('Couldn’t refresh Google Calendar. Check the connection and try again.', { tone: 'error', icon: 'calendar' });
+      });
+      return;
+    }
     if ((t = e.target.closest('.cal [data-mode]'))) {
       V.mode = t.dataset.mode;
       if (V.mode === 'month') V.date = new Date(V.date.getFullYear(), V.date.getMonth(), 1);
@@ -345,6 +358,7 @@
                   V.date = App.dayStart(saved.start); V.mode = V.mode === 'month' ? 'day' : V.mode; V.scroll = null;
                   render();
                   App.emit('data');
+                  window.DASHBOARD_INTEGRATIONS.refreshCalendar();
                   App.toast('Added <b>' + App.esc(title) + '</b> to Google Calendar', { icon: 'calendar' });
                 }).catch(function () {
                   t.disabled = false;
@@ -376,7 +390,8 @@
       if (!V.date) V.date = App.dayStart(App.now());
       if (!opts.rerender) V.scroll = null;
       render();
-    }
+    },
+    onOpen: function () { window.DASHBOARD_INTEGRATIONS.refreshCalendar(); }
   });
   App.on('minute', function () {
     if (App.current !== 'calendar') return;
