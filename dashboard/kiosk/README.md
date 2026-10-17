@@ -114,3 +114,7 @@ adb install -r kiosk/build/homehq.apk
 
 The kiosk loads the existing hosted dashboard over the frame's Wi-Fi. A USB
 connection is only needed for installation or diagnostics, not normal use.
+The kiosk supports Android WebView custom fullscreen views, so YouTube's embedded fullscreen
+control can cover the frame. Press Back or use the player's exit-fullscreen control to return to the
+dashboard. The dashboard's **Expand player** control is an alternative that fills the dashboard
+area while keeping the kiosk navigation visible.

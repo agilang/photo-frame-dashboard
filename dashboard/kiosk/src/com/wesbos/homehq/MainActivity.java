@@ -21,6 +21,10 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.webkit.WebChromeClient;
+import android.webkit.PermissionRequest;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -51,9 +55,14 @@ public class MainActivity extends Activity {
   static final String PREF_URL = "url";
   static final long EXIT_HOLD_MS = 1500;
   static final long RETRY_MS = 5000;
+  static final int AUDIO_PERMISSION_REQUEST = 12;
   static final float EXIT_SLOP_PX = 60;
 
   private WebView web;
+  private FrameLayout root;
+  private View customView;
+  private WebChromeClient.CustomViewCallback customViewCallback;
+  private PermissionRequest pendingAudioRequest;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private final int[] exitIds = new int[2];
   private final float[] exitX = new float[2];
@@ -97,6 +106,7 @@ public class MainActivity extends Activity {
     keepNavigationEnabled();
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
         | WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
 
     web = new WebView(this);
     WebSettings s = web.getSettings();
@@ -107,6 +117,45 @@ public class MainActivity extends Activity {
     // Keep navigation inside the kiosk. When the kiosk starts at boot before Wi-Fi is up, the
     // first load fails and would stay on the error page, so retry failed main-frame loads.
     // The offline screen covers WebView's error page until a load succeeds.
+    web.setWebChromeClient(new WebChromeClient() {
+      @Override
+      public void onPermissionRequest(PermissionRequest request) {
+        runOnUiThread(() -> {
+          String[] resources = request.getResources();
+          if (resources.length != 1 || !PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resources[0])
+              || !sameOrigin(request.getOrigin(), web.getUrl())) {
+            request.deny();
+            return;
+          }
+          if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)
+              == PackageManager.PERMISSION_GRANTED) {
+            request.grant(new String[] {PermissionRequest.RESOURCE_AUDIO_CAPTURE});
+            return;
+          }
+          if (pendingAudioRequest != null) pendingAudioRequest.deny();
+          pendingAudioRequest = request;
+          requestPermissions(new String[] {android.Manifest.permission.RECORD_AUDIO}, AUDIO_PERMISSION_REQUEST);
+        });
+      }
+
+      @Override
+      public void onShowCustomView(View view, CustomViewCallback callback) {
+        if (customView != null) {
+          callback.onCustomViewHidden();
+          return;
+        }
+        customView = view;
+        customViewCallback = callback;
+        root.addView(view, new FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        web.setVisibility(View.GONE);
+      }
+
+      @Override
+      public void onHideCustomView() {
+        hideCustomView();
+      }
+    });
     web.setWebViewClient(new WebViewClient() {
       @Override
       public void onPageStarted(WebView view, String url, Bitmap icon) {
@@ -119,9 +168,11 @@ public class MainActivity extends Activity {
       }
 
       @Override
-      @SuppressWarnings("deprecation")
-      public void onReceivedError(WebView view, int code, String desc, String failingUrl) {
-        Log.w(TAG, "Load failed (" + desc + "), retrying in " + RETRY_MS + " ms");
+      public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+        if (!request.isForMainFrame()) return;
+        String failingUrl = request.getUrl().toString();
+        String description = error.getDescription().toString();
+        Log.w(TAG, "Main page load failed (" + description + "), retrying in " + RETRY_MS + " ms");
         pageFailed = true;
         showOffline();
         retryUrl = failingUrl;
@@ -129,7 +180,7 @@ public class MainActivity extends Activity {
         handler.postDelayed(retry, RETRY_MS);
       }
     });
-    FrameLayout root = new FrameLayout(this);
+    root = new FrameLayout(this);
     root.addView(web);
     root.addView(buildOffline());
     setContentView(root);
@@ -161,6 +212,29 @@ public class MainActivity extends Activity {
     if (url != null) {
       handler.removeCallbacks(retry);
       web.loadUrl(url);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+      super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+      if (requestCode != AUDIO_PERMISSION_REQUEST) return;
+      PermissionRequest request = pendingAudioRequest;
+      pendingAudioRequest = null;
+      if (request == null) return;
+      if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+          && sameOrigin(request.getOrigin(), web.getUrl())) {
+        request.grant(new String[] {PermissionRequest.RESOURCE_AUDIO_CAPTURE});
+      } else {
+        request.deny();
+      }
+    }
+
+    private boolean sameOrigin(Uri requested, String pageUrl) {
+      if (requested == null || pageUrl == null) return false;
+      Uri page = Uri.parse(pageUrl);
+      return requested.getScheme() != null && requested.getScheme().equals(page.getScheme())
+          && requested.getHost() != null && requested.getHost().equals(page.getHost())
+          && requested.getPort() == page.getPort();
     }
   }
 
@@ -285,6 +359,7 @@ public class MainActivity extends Activity {
   @Override
   protected void onDestroy() {
     handler.removeCallbacksAndMessages(null);
+    hideCustomView();
     if (web != null) web.destroy();
     super.onDestroy();
   }
@@ -370,6 +445,21 @@ public class MainActivity extends Activity {
 
   @Override
   public void onBackPressed() {
+    if (customView != null) {
+      hideCustomView();
+      return;
+    }
     if (web.canGoBack()) web.goBack();
+  }
+
+  private void hideCustomView() {
+    if (customView == null) return;
+    root.removeView(customView);
+    customView = null;
+    web.setVisibility(View.VISIBLE);
+    WebChromeClient.CustomViewCallback callback = customViewCallback;
+    customViewCallback = null;
+    if (callback != null) callback.onCustomViewHidden();
+    hideSystemUi();
   }
 }

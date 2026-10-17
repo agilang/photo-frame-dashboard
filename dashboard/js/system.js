@@ -90,7 +90,10 @@
       '<button class="banner-btn" data-x>' + (opts.dismiss || 'Dismiss') + '</button>';
     box.appendChild(b);
     b.classList.add('is-in');
-    function kill() { b.remove(); }
+    function kill() {
+      b.remove();
+      if (opts.onDismiss) opts.onDismiss();
+    }
     b.querySelector('[data-x]').onclick = kill;
     if (opts.action) b.querySelector('[data-act]').onclick = function () { kill(); opts.onAction(); };
     if (opts.ms) setTimeout(kill, opts.ms);
@@ -170,8 +173,8 @@
       if (k === 'a') App.setMode('ambient');
       if (k === 'n') App.setMode('night');
       if (k === 'escape') { closeDemo(); App.closeSheet(); }
-      var views = ['home', 'calendar', 'tasks', 'shopping', 'photos', 'control', 'agents'];
-      if (k >= '1' && k <= '7') App.go(views[+k - 1]);
+      var views = ['home', 'calendar', 'tasks', 'shopping', 'photos', 'control', 'agents', 'stocks', 'music', 'timers'];
+      if (k >= '1' && k <= '9') App.go(views[+k - 1]);
     });
   });
 })();

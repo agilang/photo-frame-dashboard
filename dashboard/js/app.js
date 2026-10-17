@@ -295,17 +295,13 @@
   App.resetIdle = function () { idleSec = 0; };
 
   // ------------------------------------------------------------ stage scaling (desktop preview only)
-  var fitWidth = window.innerWidth, fitHeight = window.innerHeight;
+  var keyboardDismissUntil = 0;
   function fit() {
     var active = document.activeElement;
     var editing = active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName);
-    var keyboardResize = editing && window.innerWidth >= fitWidth * 0.9 &&
-      window.innerHeight < fitHeight * 0.82;
-    if (keyboardResize) return;
+    if (editing || Date.now() < keyboardDismissUntil) return;
     var s = Math.min(window.innerWidth / 1280, window.innerHeight / 800);
     $('#stage').style.transform = Math.abs(s - 1) < 0.01 ? '' : 'scale(' + s + ')';
-    fitWidth = window.innerWidth;
-    fitHeight = window.innerHeight;
   }
 
   // ------------------------------------------------------------ clock tick
@@ -327,7 +323,11 @@
     fit();
     window.addEventListener('resize', fit);
     if (window.visualViewport) window.visualViewport.addEventListener('resize', fit);
-    document.addEventListener('focusout', function () { setTimeout(fit, 0); });
+    document.addEventListener('focusout', function (event) {
+      if (!event.target || !/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)) return;
+      keyboardDismissUntil = Date.now() + 700;
+      setTimeout(fit, 750);
+    });
     // Switch tabs the instant a finger lands (pointerdown), not on release. Keyboard "clicks"
     // (detail === 0) still work.
     $('#rail').addEventListener('pointerdown', function (e) {

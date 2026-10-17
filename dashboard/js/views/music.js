@@ -9,6 +9,9 @@
   var searchResults = [];
   var searchError = '';
   var searching = false;
+  var musicTimerDeadline = 0;
+  var musicTimerExpired = false;
+  var playerExpanded = false;
 
   try {
     savedUrl = localStorage.getItem(STORAGE_KEY) || '';
@@ -68,12 +71,37 @@
     try {
       localStorage.setItem(STORAGE_KEY, source);
       savedUrl = source;
+      musicTimerExpired = false;
       errorText = '';
       return true;
     } catch (error) {
       errorText = 'Music link could not be saved on this device.';
       return false;
     }
+  }
+
+  function updateTimerControls() {
+    if (!viewEl) return;
+    var readout = viewEl.querySelector('[data-music-timer-readout]');
+    var cancel = viewEl.querySelector('[data-music-timer-cancel]');
+    var resume = viewEl.querySelector('[data-music-resume]');
+    if (!readout || !cancel || !resume) return;
+    cancel.hidden = !musicTimerDeadline;
+    resume.hidden = !musicTimerExpired;
+    if (musicTimerDeadline) {
+      var seconds = Math.max(0, Math.ceil((musicTimerDeadline - Date.now()) / 1000));
+      readout.textContent = 'Stops in ' + Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
+    } else {
+      readout.textContent = musicTimerExpired ? 'Timer ended · playback stopped' : 'Stop after';
+    }
+  }
+
+  function stopPlayback() {
+    musicTimerDeadline = 0;
+    musicTimerExpired = true;
+    var frame = viewEl && viewEl.querySelector('.music-player iframe');
+    if (frame) frame.src = 'about:blank';
+    updateTimerControls();
   }
 
   function renderPlayer() {
@@ -95,8 +123,10 @@
     player.hidden = false;
     empty.hidden = true;
     player.querySelector('[data-music-provider]').textContent = embed.provider + ' player';
-    frame.allow = 'encrypted-media; fullscreen; picture-in-picture';
-    if (frame.src !== embed.url) frame.src = embed.url;
+    frame.allow = 'autoplay; encrypted-media; fullscreen; picture-in-picture';
+    if (musicTimerExpired) frame.src = 'about:blank';
+    else if (frame.src !== embed.url) frame.src = embed.url;
+    updateTimerControls();
   }
 
   function renderSearchResults() {
@@ -138,7 +168,7 @@
   }
 
   function render() {
-    viewEl.innerHTML = '<div class="music-view">' +
+    viewEl.innerHTML = '<div class="music-view' + (playerExpanded ? ' is-expanded' : '') + '">' +
       '<header class="music-head"><div><div class="label">Listen together</div><h1>Music</h1></div>' +
       '<span class="music-free-badge">YouTube search + Spotify links</span></header>' +
       '<section class="music-search"><form class="music-search-form" data-music-search-form>' +
@@ -152,8 +182,16 @@
       App.esc(savedUrl) + '"><button class="btn btn--solid" type="submit">' + (savedUrl ? 'Load player' : 'Add player') + '</button>' +
       (savedUrl ? '<button class="btn btn--ghost" type="button" data-music-clear>Clear</button>' : '') + '</div></form>' +
       (errorText ? '<p class="music-error" role="status">' + App.esc(errorText) + '</p>' : '') +
-      '<section class="music-player" data-music-player hidden><div class="music-player-head"><span data-music-provider></span><span>Playback starts when you press play</span></div>' +
-      '<iframe title="Embedded music player" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></section>' +
+      '<section class="music-player" data-music-player hidden><div class="music-player-head">' +
+      '<div class="music-player-meta"><span data-music-provider></span><span data-music-timer-readout></span></div>' +
+      '<div class="music-player-actions"><div class="music-timer-controls" aria-label="Stop playback timer">' +
+      '<span>Stop after</span><button type="button" data-music-timer="15">15m</button>' +
+      '<button type="button" data-music-timer="30">30m</button><button type="button" data-music-timer="45">45m</button>' +
+      '<button type="button" data-music-timer="60">60m</button>' +
+      '<button type="button" data-music-timer-cancel hidden>Cancel</button></div>' +
+      '<button class="music-expand-button" type="button" data-music-expand>' + (playerExpanded ? 'Exit expanded' : 'Expand player') + '</button></div></div>' +
+      '<div class="music-player-frame"><iframe title="Embedded music player" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>' +
+      '<button class="music-resume" type="button" data-music-resume hidden>Play again</button></div></section>' +
       '<section class="music-empty" data-music-empty><div class="music-empty-icon">' + App.icon('music', 42) + '</div>' +
       '<h2>Your music, on the frame</h2><p>Search for a YouTube song or artist above and tap a result. For Spotify, paste a track, album, playlist, artist, or show link. Your selection is saved only in this browser.</p></section>' +
       '<p class="music-note">Free playback depends on the provider, account, and content. YouTube may show ads; Spotify may require sign-in and may limit playback. Use the embedded controls to start playback—autoplay is disabled.</p>' +
@@ -200,6 +238,30 @@
           else render();
         });
         el.addEventListener('click', function (event) {
+          var timer = event.target.closest('[data-music-timer]');
+          if (timer) {
+            musicTimerDeadline = Date.now() + Number(timer.dataset.musicTimer) * 60000;
+            musicTimerExpired = false;
+            renderPlayer();
+            return;
+          }
+          if (event.target.closest('[data-music-timer-cancel]')) {
+            musicTimerDeadline = 0;
+            musicTimerExpired = false;
+            renderPlayer();
+            return;
+          }
+          if (event.target.closest('[data-music-expand]')) {
+            playerExpanded = !playerExpanded;
+            viewEl.querySelector('.music-view').classList.toggle('is-expanded', playerExpanded);
+            event.target.closest('[data-music-expand]').textContent = playerExpanded ? 'Exit expanded' : 'Expand player';
+            return;
+          }
+          if (event.target.closest('[data-music-resume]')) {
+            musicTimerExpired = false;
+            renderPlayer();
+            return;
+          }
           var result = event.target.closest('[data-video-id]');
           if (result) {
             var videoId = decodeURIComponent(result.dataset.videoId);
@@ -217,6 +279,9 @@
           try {
             localStorage.removeItem(STORAGE_KEY);
             savedUrl = '';
+            musicTimerDeadline = 0;
+            musicTimerExpired = false;
+            playerExpanded = false;
             errorText = '';
           } catch (error) {
             errorText = 'Music link could not be removed from this device.';
@@ -229,7 +294,12 @@
     hide: function () {
       if (!viewEl) return;
       var frame = viewEl.querySelector('.music-player iframe');
-      if (frame) frame.src = 'about:blank';
+      if (frame && !musicTimerDeadline) frame.src = 'about:blank';
     }
+  });
+
+  App.on('second', function () {
+    if (musicTimerDeadline && Date.now() >= musicTimerDeadline) stopPlayback();
+    else updateTimerControls();
   });
 })();

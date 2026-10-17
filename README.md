@@ -80,8 +80,8 @@ Settings → About before you follow any guide:
 when optional live services are not configured. Today has a next-event spotlight and a shared,
 chronological family agenda, alongside the clock, weather, family presence, photo slideshow, chores,
 shopping and camera status. Other screens include an editable calendar, locally saved chores and
-shopping lists, optional camera playback, an AI assistant, interactive hourly and 7-day weather, a
-personal stock watchlist, YouTube/Spotify embeds, and a low-glare night dashboard. Google
+shopping lists, voice-controlled multi-timers, optional camera playback, an AI assistant, interactive
+hourly and 7-day weather, a personal stock watchlist, YouTube/Spotify embeds, and a low-glare night dashboard. Google
 Calendar/Tasks, Home Assistant, live Eufy video, Workers AI, and Finnhub quotes are optional
 integrations; each requires its own configuration described below.
 Shopping-list edits, chore completion, and chore stars are saved in the browser on that device;
@@ -183,10 +183,28 @@ commit them.
    `npx wrangler secret put YOUTUBE_API_KEY` from `dashboard/` for deployment. Restrict the key to
    YouTube Data API v3; the key is used only by the Worker and is never sent to the browser. YouTube
    API quota applies. You can also paste a YouTube video/playlist or Spotify track, album, playlist,
-   artist, or show URL as a fallback. The player embeds the provider's own controls, and the selected
-   link is saved only in that browser. Playback is not automatic. Ads, sign-in requirements, and
-   content availability are controlled by YouTube or Spotify and can vary by content and region.
-   Some Android WebViews may need network access and third-party cookies enabled for provider embeds.
+   artist, or show URL as a fallback. Use **Expand player** for a larger player view within the
+   dashboard; in the Home HQ kiosk, YouTube's own fullscreen control opens native fullscreen video.
+   Choose a 15-, 30-, 45-, or 60-minute stop timer to end playback automatically. The timer continues
+   while navigating to another dashboard screen; leaving Music without a timer stops playback. The
+   player embeds the provider's own controls, and the selected link is saved only in that browser.
+   Playback is not automatic. Ads, sign-in requirements, and content availability are controlled by
+   YouTube or Spotify and can vary by content and region. Some Android WebViews may need network
+   access and third-party cookies enabled for provider embeds.
+- **Timers:** open **Timers** to run multiple independent countdowns. Use the microphone and say
+   “Set a timer for 5 minutes” or “Set a 5-minute timer and a 10-minute timer”; type the same command
+   or use the quick timer form if voice recognition is unavailable. Timers are stored in that
+   browser and continue while Home HQ remains open. At the end, the dashboard shows an alert and
+   plays a repeating chime until dismissed. Voice input requires microphone permission and a browser
+   with speech recognition support; the kiosk asks for Android microphone permission the first time.
+   To enable hands-free timers, open **Timers**, tap **Enable wake phrase**, and grant microphone
+   access. Say “Hey Home,” then “set a timer for 5 minutes” within 10 seconds, or say the whole
+   command in one sentence. Wake listening continues across dashboard sections while Home HQ is
+   visible and the screen is on; its setting is saved in this browser and can be switched off on the
+   Timers page. It uses the microphone continuously and speech recognition may use the browser
+   provider's online service. Listening pauses while the page is hidden and may need microphone
+   permission or network access to resume. It cannot wake the screen while the display is off, or
+   work when the browser or device is fully closed or powered off.
 - **Night display:** the dim dashboard palette is applied when night dashboard mode is selected.
    It uses dark slate surfaces and softened teal highlights without inverting the colors of photos
    or camera video. The separate night clock remains available for a darker, glanceable screen.
