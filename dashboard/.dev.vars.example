@@ -4,6 +4,7 @@ GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
 GOOGLE_REFRESH_TOKEN=your-google-refresh-token
 WORKERS_AI_MODEL=@cf/meta/llama-3.1-8b-instruct-fp8-fast
 FINNHUB_API_KEY=your-finnhub-api-key
+YOUTUBE_API_KEY=your-youtube-data-api-v3-key
 HOME_ASSISTANT_URL=https://your-home-assistant-host
 HOME_ASSISTANT_TOKEN=your-home-assistant-token
 # Set to the Mac's home-LAN IP for the local Worker and the photo-frame browser.

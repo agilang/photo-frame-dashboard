@@ -1,12 +1,24 @@
-# Taking over Android photo frames
+# Home HQ
 
-Turn a cheap Android photo frame into a family dashboard: unlock it, root it, replace the vendor app, and run your own web page full screen.
+### A calm, glanceable family dashboard for Android photo frames
 
-**TLDR:** buy a $50 frame, point an agent at this repo and let 'er rip!
+Home HQ brings the family calendar, weather, chores, shopping list, photos and optional cameras
+together in a touch-friendly display designed to stay visible across the room.
 
-[![The family dashboard running on the BIUFRAME 10.1" photo frame](docs/images/dashboard-on-frame.jpg)](https://youtu.be/ZLycoUMltNI)
+<p align="center">
+  <img src="docs/images/home-hq-today.png" alt="Home HQ Today screen showing the clock, weather, family schedule, chores, shopping and camera status" width="100%">
+</p>
 
-▶️ **Watch the video: [https://youtu.be/ZLycoUMltNI](https://youtu.be/ZLycoUMltNI)**
+<p align="center"><em>Today screen · example view with sample dashboard data</em></p>
+
+**Explore:** [Run the dashboard](#run-the-dashboard-locally) · [Supported frames](#working-frames) ·
+[Find your setup guide](#which-frame-do-you-have) · [Credits](#credits-and-services)
+
+This repository also documents how owners have unlocked and repurposed specific Android frames.
+Hardware and firmware vary, so use the guide for your exact device and verify its model before
+following any device-level instructions.
+
+▶️ **Watch the frame setup video:** [YouTube](https://youtu.be/ZLycoUMltNI)
 
 ## Working frames
 
@@ -64,13 +76,18 @@ Settings → About before you follow any guide:
 
 ## The dashboard
 
-[`dashboard/`](dashboard) is the family dashboard we run on the BIUFRAME: a Vite web app deployed to
-Cloudflare Workers, with demo-data fallback and optional Google and Home Assistant integrations.
-The current dashboard includes a modern Today screen, an editable calendar, locally saved chores
-and shopping lists, a family photo slideshow, camera controls, an AI chat assistant, interactive
-hourly and 7-day weather, a personal stock watchlist, an optional YouTube/Spotify music player,
-and a low-glare night dashboard. Google Calendar/Tasks, Home Assistant, live Eufy video, Workers AI,
-and Finnhub quotes are optional integrations; each requires its own configuration described below.
+[`dashboard/`](dashboard) is a Vite web app deployed to Cloudflare Workers, with useful sample data
+when optional live services are not configured. Today has a next-event spotlight and a shared,
+chronological family agenda, alongside the clock, weather, family presence, photo slideshow, chores,
+shopping and camera status. Other screens include an editable calendar, locally saved chores and
+shopping lists, optional camera playback, an AI assistant, interactive hourly and 7-day weather, a
+personal stock watchlist, YouTube/Spotify embeds, and a low-glare night dashboard. Google
+Calendar/Tasks, Home Assistant, live Eufy video, Workers AI, and Finnhub quotes are optional
+integrations; each requires its own configuration described below.
+Shopping-list edits, chore completion, and chore stars are saved in the browser on that device;
+they are not shared across frames and can be removed by clearing the browser or kiosk app data.
+Inactive screens refresh when opened rather than being rebuilt in the background after every data
+update, keeping background work lighter on frame hardware.
 `dashboard/kiosk/` is a small full-screen WebView Android app,
 built without Gradle, that shows it. Hold two fingers still for 1.5 s to open a menu for the
 launcher, Android settings, and reloading. On frames without system navigation, optional floating
@@ -152,19 +169,24 @@ commit them.
    The frame stores up to 12 US-listed ticker symbols locally and requests quotes through the Worker;
    the key is never sent to the browser. Quote availability, delay, and rate limits depend on
    Finnhub's plan and exchange. This display is informational, not investment advice.
-- **Photos:** put image files under `dashboard/public/photos/` and list them in
-   `dashboard/public/photos/manifest.json`. Only listed files are shown. That folder is git-ignored
-   except for the manifest, because family photos should not be committed. Export or sync photos from
-   Google Photos or Apple Photos into this folder yourself; Apple Photos integration is not connected
-   directly. The built-in starter slideshow uses sample online images until you add your own photos.
-   For privacy, review the sample-image provider's terms before using the starter slideshow in a
-   public deployment.
-- **Music:** open **Music** and paste an HTTPS YouTube video or playlist URL, or a Spotify track,
-   album, playlist, artist, or show URL. The player embeds the provider's own controls; no API key or
-   subscription integration is needed, and the URL is saved only in that browser. Playback is not
-   automatic. Free playback, ads, sign-in requirements, and content availability are controlled by
-   YouTube or Spotify and can vary by content and region. Some Android WebViews may need network
-   access and third-party cookies enabled for provider embeds.
+- **Photos:** copy image files into `dashboard/public/photos/` and list each one in
+   `dashboard/public/photos/manifest.json`; only listed images are displayed. The photos folder is
+   git-ignored except for the manifest, so your family pictures are not committed. Export or copy
+   photos from Google Photos or Apple Photos into this folder yourself; there is no direct account
+   connection or upload screen. Run `npm run deploy` from `dashboard/` on the computer containing
+   the photos to publish them with the dashboard. Until you add your own images, the starter
+   slideshow uses sample images from Picsum Photos; review that provider's terms before using the
+   samples in a public deployment.
+- **Music:** open **Music** and search for a song or artist, then tap a result to play it. Search
+   requires a Google Cloud API key with **YouTube Data API v3** enabled. Add
+   `YOUTUBE_API_KEY=...` to `dashboard/.dev.vars` for local Wrangler development, or run
+   `npx wrangler secret put YOUTUBE_API_KEY` from `dashboard/` for deployment. Restrict the key to
+   YouTube Data API v3; the key is used only by the Worker and is never sent to the browser. YouTube
+   API quota applies. You can also paste a YouTube video/playlist or Spotify track, album, playlist,
+   artist, or show URL as a fallback. The player embeds the provider's own controls, and the selected
+   link is saved only in that browser. Playback is not automatic. Ads, sign-in requirements, and
+   content availability are controlled by YouTube or Spotify and can vary by content and region.
+   Some Android WebViews may need network access and third-party cookies enabled for provider embeds.
 - **Night display:** the dim dashboard palette is applied when night dashboard mode is selected.
    It uses dark slate surfaces and softened teal highlights without inverting the colors of photos
    or camera video. The separate night clock remains available for a darker, glanceable screen.

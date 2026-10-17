@@ -10,7 +10,10 @@
 
   function clock() {
     var n = App.now();
-    return '<div class="h-time num">' + App.fmt.time(n, false) + '<span class="h-ampm">' + App.fmt.ampm(n) + '</span></div>' +
+    var hour = n.getHours();
+    var greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    return '<div class="h-greeting"><span>HOME HQ</span><b>' + greeting + '</b></div>' +
+      '<div class="h-time num">' + App.fmt.time(n, false) + '<span class="h-ampm">' + App.fmt.ampm(n) + '</span></div>' +
       '<div class="h-date"><b>' + App.fmt.day(n) + '</b> ' + App.fmt.month(n) + ' ' + n.getDate() + '</div>';
   }
 
@@ -154,7 +157,8 @@
   }
 
   function presence() {
-    return D.people.map(function (p) {
+    var homeCount = D.people.filter(function (person) { return person.home; }).length;
+    return '<div class="h-presence-label"><span>FAMILY</span><b>' + homeCount + ' home</b></div>' + D.people.map(function (p) {
       var sub = p.home ? 'Home' : (p.eta ? '<b>ETA ' + p.eta + ' min</b>' : p.status);
       return '<div class="h-who' + (p.home ? ' is-home' : '') + '" style="' + App.pstyle(p) + '">' +
         App.avatar(p, 36, p.home ? '' : 'avatar--away') +
@@ -195,22 +199,34 @@
       '</div>' + big + '</button>';
   }
 
-  function lanes() {
+  function agenda() {
     var now = App.now();
-    return D.people.map(function (p) {
-      var list = App.timedOn(now, p.id).filter(function (e) { return e.end > now; });
-      var shown = list.slice(0, 3), more = list.length - shown.length;
-      return '<div class="h-lane" style="' + App.pstyle(p) + '">' +
-        '<div class="h-lane-head">' + App.avatar(p, 30) + '<b>' + p.name + '</b></div>' +
-        (list.length ? shown.map(function (e) {
-          var cur = e.start <= now;
-          return '<button class="h-ev' + (cur ? ' is-now' : '') + '" data-ev="' + e.id + '">' +
-            '<span class="h-ev-t">' + (cur ? 'Now' : App.fmt.time(e.start, false)) + '</span>' +
-            '<span class="h-ev-n">' + App.esc(e.title) + '</span></button>';
-        }).join('') : '<div class="h-free serif"><i>Free</i> the rest of the day</div>') +
-        (more > 0 ? '<button class="h-more" data-go="calendar">+' + more + ' more</button>' : '') +
-        '</div>';
+    var events = App.allDayOn(now).concat(App.timedOn(now)).filter(function (event) {
+      return event.allDay || event.end > now;
+    }).sort(function (a, b) { return a.start - b.start || b.end - a.end; });
+    var shown = events.slice(0, 5);
+    var rows = shown.map(function (event) {
+      var current = !event.allDay && event.start <= now && event.end > now;
+      var people = App.isFamily(event)
+        ? 'Everyone'
+        : event.people.map(function (id) { return App.person(id).name; }).join(' · ');
+      var color = App.evColor(event);
+      return '<button class="h-agenda-row' + (current ? ' is-now' : '') + '" data-ev="' + event.id + '">' +
+        '<span class="h-agenda-time">' + (event.allDay ? 'ALL DAY' : current ? 'NOW' : App.fmt.time(event.start, false)) + '</span>' +
+        '<span class="h-agenda-marker" style="' + App.pstyle(color) + '"></span>' +
+        '<span class="h-agenda-copy"><b>' + App.esc(event.title) + '</b><small>' + App.esc(people) +
+        (!event.allDay ? ' · ' + App.fmt.time(event.end, false) : '') + '</small></span>' +
+        '<span class="h-agenda-arrow">' + App.icon('right', 18) + '</span></button>';
     }).join('');
+    if (!rows) {
+      rows = '<div class="h-agenda-empty"><span class="h-agenda-empty-icon">' + App.icon('check', 22) +
+        '</span><span><b>You’re all caught up</b><small>No more plans on the calendar today.</small></span></div>';
+    } else if (events.length > shown.length) {
+      rows += '<button class="h-agenda-more" data-go="calendar">See ' + (events.length - shown.length) + ' more events ' + App.icon('right', 16) + '</button>';
+    }
+    return '<div class="h-agenda-head"><div><div class="label">YOUR DAY</div><h2>Coming up</h2></div>' +
+      '<button class="h-agenda-link" data-go="calendar">Full calendar ' + App.icon('right', 17) + '</button></div>' +
+      '<div class="h-agenda-list">' + rows + '</div>';
   }
 
   function ring(done, total, size) {
@@ -257,7 +273,8 @@
           ? 'No cameras found'
           : 'Connecting to camera bridge…';
     return '<div class="label">Cameras</div>' +
-      '<div class="h-st-row">' + App.icon('camera', 24) + (cameras.length ? '<b class="num">' + cameras.length + '</b>' : '') + '<span>' + detail + '</span></div>' +
+      '<div class="h-st-row h-st-row--state' + (cameras.length ? ' is-connected' : integrations.eufyError ? ' is-offline' : '') + '">' +
+      '<span class="h-camera-dot"></span>' + App.icon('camera', 22) + (cameras.length ? '<b class="num">' + cameras.length + '</b>' : '') + '<span>' + detail + '</span></div>' +
       '<div class="h-st-row"><span>Tap to view camera status</span></div>';
   }
 
@@ -267,10 +284,17 @@
     paintWeatherCard();
     el.querySelector('.h-presence').innerHTML = presence();
     el.querySelector('.h-hero-slot').innerHTML = hero();
-    el.querySelector('.h-lanes').innerHTML = lanes();
+    el.querySelector('.h-agenda').innerHTML = agenda();
     el.querySelector('.h-chores').innerHTML = chores();
     el.querySelector('.h-shop').innerHTML = shopping();
     el.querySelector('.h-status').innerHTML = status();
+  }
+
+  function paintTime() {
+    if (!V.el || !V.el.firstChild) return;
+    V.el.querySelector('.h-clock').innerHTML = clock();
+    V.el.querySelector('.h-hero-slot').innerHTML = hero();
+    V.el.querySelector('.h-agenda').innerHTML = agenda();
   }
 
   function photoCaption(s) {
@@ -286,7 +310,7 @@
           '<div class="h-clock" data-go="calendar"></div>' +
           '<button class="h-weather" data-weather aria-label="Open hourly forecast"></button>' +
           '<div class="h-presence"></div>' +
-          '<div class="h-main"><div class="h-hero-slot"></div><div class="h-lanes" ></div></div>' +
+          '<div class="h-main"><div class="h-hero-slot"></div><section class="h-agenda"></section></div>' +
           '<div class="h-side">' +
           '  <button class="h-photo" data-go="photos"><div class="h-photo-stage"></div><div class="h-photo-cap"></div></button>' +
           '  <button class="h-chores card" data-go="tasks"></button>' +
@@ -304,18 +328,14 @@
       paint();
       V.slides.start();
     },
-    resume: function () { V.slides.start(); },
+    resume: function () { paintTime(); V.slides.start(); },
     hide: function () { if (V.slides) V.slides.stop(); }
   });
   // Every minute: just the clock and next-up countdown (cheap, even while hidden). Weather on the hour.
   App.on('minute', function (n) {
-    if (!V.el || !V.el.firstChild) return;
-    V.el.querySelector('.h-clock').innerHTML = clock();
-    V.el.querySelector('.h-hero-slot').innerHTML = hero();
-    if (n.getMinutes() === 0) {
-      paintWeatherCard();
-      V.el.querySelector('.h-lanes').innerHTML = lanes();
-    }
+    if (App.current !== 'home' || !V.el || !V.el.firstChild) return;
+    paintTime();
+    if (n.getMinutes() === 0) paintWeatherCard();
   });
   App.on('data', function () { if (App.current === 'home') paint(); });
 })();

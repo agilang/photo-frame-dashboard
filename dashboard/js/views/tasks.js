@@ -5,6 +5,7 @@
   var V = { el: null, routine: null, pending: {}, source: 'chores', customChores: [] };
   var LANES = D.people.map(function (person) { return person.id; }).concat(['any']);
   var STORAGE_KEY = 'home-hq-custom-chores-v1';
+  var PROGRESS_KEY = 'home-hq-chore-progress-v1';
 
   function loadCustomChores() {
     try {
@@ -20,6 +21,49 @@
       Array.prototype.push.apply(D.chores, chores);
     } catch (error) {
       App.toast('Saved custom chores could not be loaded. Existing chores are unchanged.', { tone: 'error', icon: 'check' });
+    }
+  }
+
+  function loadChoreProgress() {
+    try {
+      var saved = localStorage.getItem(PROGRESS_KEY);
+      if (!saved) return;
+      var progress = JSON.parse(saved);
+      if (!progress || !progress.chores || typeof progress.chores !== 'object' ||
+          !progress.stars || typeof progress.stars !== 'object' ||
+          Object.keys(progress.stars).some(function (person) {
+            return !D.people.some(function (item) { return item.id === person; }) ||
+              !Number.isFinite(progress.stars[person]) || progress.stars[person] < 0;
+          }) ||
+          Object.keys(progress.chores).some(function (id) {
+            var savedChore = progress.chores[id];
+            return !D.chores.some(function (chore) { return chore.id === id; }) ||
+              !savedChore || typeof savedChore.done !== 'boolean' ||
+              (savedChore.doneBy != null && LANES.indexOf(savedChore.doneBy) === -1);
+          })) throw new Error('Saved chore progress is invalid');
+      Object.keys(progress.chores).forEach(function (id) {
+        var chore = D.chores.filter(function (item) { return item.id === id; })[0];
+        chore.done = progress.chores[id].done;
+        if (progress.chores[id].doneBy) chore.doneBy = progress.chores[id].doneBy;
+        else delete chore.doneBy;
+      });
+      Object.keys(progress.stars).forEach(function (person) { D.stars[person] = progress.stars[person]; });
+    } catch (error) {
+      App.toast('Saved chore progress could not be loaded. The sample progress is unchanged.', { tone: 'error', icon: 'star' });
+    }
+  }
+
+  function saveChoreProgress() {
+    var chores = {};
+    D.chores.forEach(function (chore) {
+      chores[chore.id] = { done: !!chore.done, doneBy: chore.doneBy || null };
+    });
+    try {
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify({ chores: chores, stars: D.stars }));
+      return true;
+    } catch (error) {
+      App.toast('Couldn’t save chore progress on this device.', { tone: 'error', icon: 'star' });
+      return false;
     }
   }
 
@@ -81,6 +125,7 @@
           }
           V.customChores = next;
           D.chores.push(chore);
+          saveChoreProgress();
           V.routine = chore.r;
           close();
           render();
@@ -225,6 +270,7 @@
       if (c.id.indexOf('custom-') === 0) saveCustomChores();
       var earner = D.stars[c.who] != null ? c.who : (by && D.stars[by] != null ? by : null);
       if (earner && c.stars) D.stars[earner] += c.stars;
+      saveChoreProgress();
       render();
       App.emit('data');
       var laneList = listFor(c.who, r);
@@ -242,6 +288,7 @@
             delete c.doneBy;
             if (c.id.indexOf('custom-') === 0) saveCustomChores();
             if (earner && c.stars) D.stars[earner] -= c.stars;
+            saveChoreProgress();
             render();
             App.emit('data');
           }
@@ -312,6 +359,7 @@
             if (earner && c.stars) D.stars[earner] -= c.stars;
             delete c.doneBy;
             if (c.id.indexOf('custom-') === 0) saveCustomChores();
+            saveChoreProgress();
             delete V.pending[c.id];
             render();
             App.emit('data');
@@ -327,6 +375,7 @@
         if (earner && c.stars) D.stars[earner] -= c.stars;
         delete c.doneBy;
         if (c.id.indexOf('custom-') === 0) saveCustomChores();
+        saveChoreProgress();
         render();
         App.emit('data');
         return;
@@ -338,7 +387,7 @@
 
   App.register('tasks', {
     show: function (el) {
-      if (!V.el) { V.el = el; loadCustomChores(); el.addEventListener('click', onClick); }
+      if (!V.el) { V.el = el; loadCustomChores(); loadChoreProgress(); el.addEventListener('click', onClick); }
       render();
     }
   });

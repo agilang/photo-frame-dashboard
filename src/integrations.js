@@ -419,6 +419,42 @@ async function stockQuote(url, env) {
   });
 }
 
+async function youtubeSearch(url, env) {
+  const queryText = (url.searchParams.get("q") || "").trim();
+  if (queryText.length < 2 || queryText.length > 100) {
+    return failure("Enter a song or artist between 2 and 100 characters", 400);
+  }
+  if (!env.YOUTUBE_API_KEY) return failure("YouTube search is not configured", 503);
+  const query = new URLSearchParams({
+    key: env.YOUTUBE_API_KEY,
+    part: "snippet",
+    type: "video",
+    videoEmbeddable: "true",
+    safeSearch: "moderate",
+    maxResults: "8",
+    q: queryText,
+  });
+  const response = await fetch(`https://www.googleapis.com/youtube/v3/search?${query}`);
+  if (response.status === 403) return failure("YouTube search is unavailable. Check the API key, API access, and quota.", 502);
+  if (!response.ok) return failure("YouTube search failed. Try again later.", 502);
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    return failure("YouTube returned invalid search results", 502);
+  }
+  return json({
+    results: (data.items || []).filter((item) => (
+      typeof item?.id?.videoId === "string" &&
+      typeof item?.snippet?.title === "string"
+    )).map((item) => ({
+      id: item.id.videoId,
+      title: item.snippet.title,
+      channel: typeof item.snippet.channelTitle === "string" ? item.snippet.channelTitle : "",
+    })),
+  });
+}
+
 const DEFAULT_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8-fast";
 
 async function workersAiStatus(env) {
@@ -478,6 +514,7 @@ export async function handleIntegrationApi(request, env, url) {
       return json({ configured: !!env.FINNHUB_API_KEY, provider: "Finnhub" });
     }
     if (url.pathname === "/api/stocks/quote" && request.method === "GET") return await stockQuote(url, env);
+    if (url.pathname === "/api/music/search" && request.method === "GET") return await youtubeSearch(url, env);
     if (url.pathname === "/api/ai/status" && request.method === "GET") return await workersAiStatus(env);
     if (url.pathname === "/api/ai/chat" && request.method === "POST") return await workersAiChat(request, env);
     return failure("Not found", 404);

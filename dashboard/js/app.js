@@ -189,35 +189,12 @@
     var view = App.views[name];
     if (!view._built || view._dirty || opts.rerender || (view.minutely && view._min !== minuteKey())) build(name, opts);
     else if (view.resume) view.resume($('#view-' + name));
+    if (view.onOpen) view.onOpen();
     if (location.hash !== '#' + name) history.replaceState(null, '', '#' + name);
   };
-  // Build a hidden view and lay it out now (cached by content-visibility; no paint happens).
-  function prebuild(name) {
-    var el = $('#view-' + name), view = App.views[name];
-    build(name);
-    if (view.hide) view.hide();
-    el.classList.add('is-warming');
-    el.offsetHeight;
-    el.classList.remove('is-warming');
-  }
-  // Pre-build (startup) and re-build (after data changes) hidden views in the background, one per
-  // slot, so navigating to them never pays the rebuild cost.
-  var refreshTimer = null;
-  function refreshStale(delay) {
-    clearTimeout(refreshTimer);
-    refreshTimer = setTimeout(function next() {
-      var name = Object.keys(App.views).filter(function (k) {
-        var v = App.views[k];
-        return k !== App.current && (!v._built || v._dirty);
-      })[0];
-      if (!name) return;
-      prebuild(name);
-      refreshTimer = setTimeout(next, 400);
-    }, delay);
-  }
+  // Keep hidden views dirty until opened instead of rebuilding them on the active view's thread.
   function markStale() {
     Object.keys(App.views).forEach(function (k) { if (k !== App.current) App.views[k]._dirty = true; });
-    refreshStale(1500);
   }
   App.on('data', markStale);
   App.on('time', markStale);
@@ -318,9 +295,17 @@
   App.resetIdle = function () { idleSec = 0; };
 
   // ------------------------------------------------------------ stage scaling (desktop preview only)
+  var fitWidth = window.innerWidth, fitHeight = window.innerHeight;
   function fit() {
+    var active = document.activeElement;
+    var editing = active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName);
+    var keyboardResize = editing && window.innerWidth >= fitWidth * 0.9 &&
+      window.innerHeight < fitHeight * 0.82;
+    if (keyboardResize) return;
     var s = Math.min(window.innerWidth / 1280, window.innerHeight / 800);
     $('#stage').style.transform = Math.abs(s - 1) < 0.01 ? '' : 'scale(' + s + ')';
+    fitWidth = window.innerWidth;
+    fitHeight = window.innerHeight;
   }
 
   // ------------------------------------------------------------ clock tick
@@ -341,6 +326,8 @@
     App.setTime();
     fit();
     window.addEventListener('resize', fit);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', fit);
+    document.addEventListener('focusout', function () { setTimeout(fit, 0); });
     // Switch tabs the instant a finger lands (pointerdown), not on release. Keyboard "clicks"
     // (detail === 0) still work.
     $('#rail').addEventListener('pointerdown', function (e) {
@@ -357,7 +344,6 @@
     tick();
     setInterval(tick, 1000);
     App.emit('ready');
-    refreshStale(1500);
     setTimeout(function () { App.toast('Tip: press and hold the <b>clock</b> in the sidebar for demo controls', { ms: 6000, icon: 'bolt' }); }, 1200);
   };
   document.addEventListener('DOMContentLoaded', function () { App.start(); });
