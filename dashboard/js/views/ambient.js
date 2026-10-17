@@ -11,6 +11,7 @@
       '<div class="amb-right">' +
       '<div class="amb-wx">' + App.icon(w.cond, 44) + '<span class="num">' + window.DASHBOARD_INTEGRATIONS.temperature(w.temp) + '°' + window.DASHBOARD_INTEGRATIONS.weatherSettings.unit + '</span><small>' + w.summary + '</small></div>' +
       (next ? '<div class="amb-next" style="' + App.pstyle(App.evColor(next)) + '"><i></i>' + App.esc(next.title) + ' · ' + App.fmt.time(next.start) + '</div>' : '') +
+      '<div class="amb-timer" data-lock-timer-summary hidden></div>' +
       '<div class="amb-who">' + D.people.map(function (p) { return App.avatar(p, 34, p.home ? '' : 'avatar--away'); }).join('') + '</div>' +
       '</div>';
   }
@@ -19,6 +20,7 @@
     var first = App.timedOn(tomorrow)[0], w = App.weatherNow();
     return '<div class="nt-time num">' + App.fmt.time(n, false) + '</div>' +
       '<div class="nt-line">' + App.icon(w.cond, 26) + ' ' + window.DASHBOARD_INTEGRATIONS.temperature(w.temp) + '°' + window.DASHBOARD_INTEGRATIONS.weatherSettings.unit + ' · ' + (first ? 'First up ' + App.fmt.rel(first.start).toLowerCase() + ': <b>' + App.esc(first.title) + '</b> ' + App.fmt.time(first.start) + ' · ' + App.person(first.people[0]).name : 'Nothing early tomorrow') + '</div>' +
+      '<div class="nt-timer-summary" data-lock-timer-summary hidden></div>' +
       '<div class="nt-lock">' + App.icon('lock', 20) + ' House locked · alarm armed</div>';
   }
 

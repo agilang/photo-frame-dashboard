@@ -277,33 +277,6 @@ async function homeAssistantCamera(request, env) {
   });
 }
 
-async function legacyEufyBridge(request, env, url) {
-  if (!env.EUFY_BRIDGE_URL || !env.EUFY_BRIDGE_TOKEN) {
-    throw new Error("Eufy local bridge is not configured");
-  }
-  const base = new URL(env.EUFY_BRIDGE_URL);
-  let path;
-  if (url.pathname === "/api/eufy/cameras" && request.method === "GET") {
-    path = "/api/cameras";
-  } else {
-    const match = /^\/api\/eufy\/cameras\/([a-f0-9]{20})\/snapshot$/.exec(url.pathname);
-    if (!match || request.method !== "GET") return failure("Not found", 404);
-    path = `/api/cameras/${match[1]}/snapshot`;
-    if (url.searchParams.get("live") === "1") path += "?live=1";
-  }
-  const response = await fetch(new URL(path, base), {
-    headers: { Authorization: `Bearer ${env.EUFY_BRIDGE_TOKEN}` },
-  });
-  return new Response(response.body, {
-    status: response.status,
-    headers: {
-      "Content-Type": response.headers.get("Content-Type") || "application/json; charset=utf-8",
-      "Cache-Control": "no-store",
-      "X-Content-Type-Options": "nosniff",
-    },
-  });
-}
-
 function eufyBridgeConfig(env) {
   const bridgeUrl = env.EUFY_LIVE_BRIDGE_BROWSER_URL;
   const go2rtcUrl = env.EUFY_GO2RTC_BROWSER_URL;

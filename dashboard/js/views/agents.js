@@ -118,15 +118,11 @@
 
   function render() {
     V.el.innerHTML = '<div class="agents">' +
-      '<header class="ag-top"><div><div class="label">' + (V.view === 'ai' ? 'General help and ideas · no household data access' : 'Sample usage metrics · not live provider data') + '</div><h1 class="serif">' + (V.view === 'ai' ? 'Assistant' : 'Usage') + '</h1></div>' +
-      '<div class="ag-sync"><div class="seg"><button class="' + (V.view === 'ai' ? 'is-on' : '') + '" data-agent-view="ai">Chat</button><button class="' + (V.view === 'usage' ? 'is-on' : '') + '" data-agent-view="usage">Usage</button></div>' +
-      (V.view === 'usage' ? '<span class="label">' + synced() + '</span><button class="icon-btn" data-refresh aria-label="Refresh">' + App.icon('undo', 26) + '</button>' : '') + '</div></header>' +
-      (V.view === 'ai' ? aiChat() : '<div class="ag-grid">' + D.agents.map(card).join('') + summary() + '</div>') +
+      '<header class="ag-top"><div><div class="label">General help and ideas · no household data access</div><h1 class="serif">Assistant</h1></div></header>' +
+      aiChat() +
       '</div>';
-    if (V.view === 'ai') {
-      var log = V.el.querySelector('.ag-chat-log');
-      log.scrollTop = log.scrollHeight;
-    }
+    var log = V.el.querySelector('.ag-chat-log');
+    log.scrollTop = log.scrollHeight;
   }
 
   function sendChat(event) {
@@ -156,8 +152,6 @@
       if (!V.el) {
         V.el = el;
         el.addEventListener('click', function (e) {
-          var view = e.target.closest('[data-agent-view]');
-          if (view) { V.view = view.dataset.agentView; return render(); }
           var prompt = e.target.closest('[data-prompt]');
           if (prompt) {
             var input = V.el.querySelector('[data-ai-input]');
@@ -168,10 +162,6 @@
             return;
           }
           if (e.target.closest('[data-clear-chat]')) { V.chat = []; return render(); }
-          var b = e.target.closest('[data-refresh]');
-          if (!b) return;
-          V.synced = Date.now();
-          render();
         });
         el.addEventListener('submit', function (e) {
           if (e.target.matches('[data-ai-form]')) sendChat(e);
@@ -180,6 +170,6 @@
       render();
     }
   });
-  App.on('workers-ai-status', function () { if (V.el && V.view === 'ai') render(); });
+  App.on('workers-ai-status', function () { if (V.el) render(); });
   App.on('minute', tick);
 })();

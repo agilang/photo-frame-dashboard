@@ -1,7 +1,6 @@
 # Eufy live video on the photo frame
 
-The dashboard's original local Eufy bridge only returned still JPEGs. For live video, use the
-maintained [`ha-eufy-sdk-bridge`](https://github.com/mega-yfue/ha-eufy-sdk-bridge), which exposes
+Use the maintained [`ha-eufy-sdk-bridge`](https://github.com/mega-yfue/ha-eufy-sdk-bridge), which exposes
 camera discovery and snapshots and bundles go2rtc for browser playback.
 
 This setup is for a dashboard served locally on your home network and viewed by the photo frame.
@@ -10,8 +9,8 @@ LAN WebRTC stream from a remote Cloudflare page without a separately secured net
 
 ## Start the bridge
 
-Stop the old `dashboard/eufy-bridge` process first. Eufy generally allows one active account session;
-running two bridges with the same account can make them disconnect each other.
+Eufy generally allows one active account session. Run only this bridge on the account; a second
+client logging in disconnects it and triggers a new verification code.
 
 On macOS, Docker containers use Docker Desktop's VM network. Publish the bridge and go2rtc ports
 explicitly so both the Mac and the photo frame can reach them.
