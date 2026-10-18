@@ -167,14 +167,40 @@
     }).join('');
   }
 
+  // Events after today, soonest first, so empty days still show what's ahead.
+  function upcoming(limit) {
+    var now = App.now(), out = [];
+    for (var d = 1; d <= 14 && out.length < limit; d++) {
+      var day = App.addDays(now, d);
+      App.allDayOn(day).concat(App.timedOn(day)).forEach(function (event) {
+        if (out.length < limit) out.push({ event: event, day: day });
+      });
+    }
+    return out;
+  }
+
+  function quickFacts() {
+    var r = App.currentRoutine();
+    var choresLeft = D.chores.filter(function (c) { return !c.done; }).length;
+    var items = D.groceries.filter(function (g) { return !g.done; }).length;
+    var home = D.people.filter(function (person) { return person.home; }).length;
+    return '<div class="h-facts">' +
+      '<span><b class="num">' + choresLeft + '</b>chores left</span>' +
+      '<span><b class="num">' + items + '</b>to buy</span>' +
+      '<span><b class="num">' + home + '/' + D.people.length + '</b>home</span></div>';
+  }
+
   function hero() {
     var e = App.nextEvent(), now = App.now();
     if (!e) {
-      var tomorrow = App.timedOn(App.addDays(now, 1))[0];
+      var next = upcoming(1)[0];
+      var meta = next
+        ? 'Next: <b>' + App.esc(next.event.title) + '</b> · ' + App.fmt.rel(next.day) + (next.event.allDay ? '' : ' at ' + App.fmt.time(next.event.start))
+        : 'Nothing planned for the next two weeks.';
       return '<div class="h-hero h-hero--empty" data-go="calendar">' +
         '<div class="label label--light">Rest of today</div>' +
-        '<div class="h-hero-title serif">Nothing else scheduled.<br><i>Enjoy the quiet.</i></div>' +
-        (tomorrow ? '<div class="h-hero-meta">Tomorrow starts with <b>' + App.esc(tomorrow.title) + '</b> at ' + App.fmt.time(tomorrow.start) + '</div>' : '') +
+        '<div class="h-hero-title serif">Nothing else scheduled. <i>Enjoy the quiet.</i></div>' +
+        '<div class="h-hero-meta">' + meta + '</div>' + quickFacts() +
         '</div>';
     }
     var p = App.evColor(e);
@@ -202,31 +228,39 @@
 
   function agenda() {
     var now = App.now();
-    var events = App.allDayOn(now).concat(App.timedOn(now)).filter(function (event) {
+    var today = App.allDayOn(now).concat(App.timedOn(now)).filter(function (event) {
       return event.allDay || event.end > now;
     }).sort(function (a, b) { return a.start - b.start || b.end - a.end; });
-    var shown = events.slice(0, 5);
-    var rows = shown.map(function (event) {
-      var current = !event.allDay && event.start <= now && event.end > now;
+    var items = today.map(function (event) { return { event: event, day: now }; });
+    var later = upcoming(14);
+    var all = items.concat(later);
+    var shown = all.length > 5 ? all.slice(0, 4) : all;
+    var rows = shown.map(function (item) {
+      var event = item.event, isToday = item.day === now;
+      var current = isToday && !event.allDay && event.start <= now && event.end > now;
       var people = App.isFamily(event)
         ? 'Everyone'
         : event.people.map(function (id) { return App.person(id).name; }).join(' · ');
       var color = App.evColor(event);
-      return '<button class="h-agenda-row' + (current ? ' is-now' : '') + '" data-ev="' + event.id + '">' +
-        '<span class="h-agenda-time">' + (event.allDay ? 'ALL DAY' : current ? 'NOW' : App.fmt.time(event.start, false)) + '</span>' +
+      var when = event.allDay ? 'ALL DAY' : current ? 'NOW' : App.fmt.time(event.start, !isToday);
+      var timeHtml = isToday ? when : '<em>' + App.fmt.rel(item.day).toUpperCase() + '</em>' + when;
+      return '<button class="h-agenda-row' + (current ? ' is-now' : '') + (isToday ? '' : ' is-later') + '" data-ev="' + event.id + '">' +
+        '<span class="h-agenda-time">' + timeHtml + '</span>' +
         '<span class="h-agenda-marker" style="' + App.pstyle(color) + '"></span>' +
         '<span class="h-agenda-copy"><b>' + App.esc(event.title) + '</b><small>' + App.esc(people) +
-        (!event.allDay ? ' · ' + App.fmt.time(event.end, false) : '') + '</small></span>' +
-        '<span class="h-agenda-arrow">' + App.icon('right', 18) + '</span></button>';
+        (event.loc ? ' · ' + App.esc(event.loc) : '') +
+        (!event.allDay ? ' · ' + App.fmt.range(event.start, event.end) : '') + '</small></span>' +
+        '<span class="h-agenda-arrow">' + App.icon('right', 20) + '</span></button>';
     }).join('');
     if (!rows) {
-      rows = '<div class="h-agenda-empty"><span class="h-agenda-empty-icon">' + App.icon('check', 22) +
-        '</span><span><b>You’re all caught up</b><small>No more plans on the calendar today.</small></span></div>';
-    } else if (events.length > shown.length) {
-      rows += '<button class="h-agenda-more" data-go="calendar">See ' + (events.length - shown.length) + ' more events ' + App.icon('right', 16) + '</button>';
+      rows = '<div class="h-agenda-empty"><span class="h-agenda-empty-icon">' + App.icon('check', 26) +
+        '</span><span><b>Your calendar is clear</b><small>Nothing planned for the next two weeks.</small></span></div>';
+    } else if (all.length > shown.length) {
+      rows += '<button class="h-agenda-more" data-go="calendar">See ' + (all.length - shown.length) + '+ more ' + App.icon('right', 18) + '</button>';
     }
-    return '<div class="h-agenda-head"><div><div class="label">YOUR DAY</div><h2>Coming up</h2></div>' +
-      '<button class="h-agenda-link" data-go="calendar">Full calendar ' + App.icon('right', 17) + '</button></div>' +
+    var sub = today.length ? today.length + (today.length === 1 ? ' event' : ' events') + ' left today' : 'Today is clear · showing what\u2019s next';
+    return '<div class="h-agenda-head"><div><div class="label">' + sub.toUpperCase() + '</div><h2>Coming up</h2></div>' +
+      '<button class="h-agenda-link" data-go="calendar">Full calendar ' + App.icon('right', 18) + '</button></div>' +
       '<div class="h-agenda-list">' + rows + '</div>';
   }
 

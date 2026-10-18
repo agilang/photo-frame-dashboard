@@ -1,3 +1,6 @@
+/* Self-hosted so the frame renders the same offline (variable weight 200-800). */
+@font-face { font-family: 'Plus Jakarta Sans'; font-style: normal; font-weight: 200 800; font-display: swap; src: url('/fonts/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Plus Jakarta Sans'; font-style: italic; font-weight: 200 800; font-display: swap; src: url('/fonts/plus-jakarta-sans-latin-wght-italic.woff2') format('woff2'); }
 /* Design tokens. Target: Android WebView 106 — no nesting, no color-mix(), no oklch(), no dvh. */
 :root {
   /* paper + ink */

@@ -3,7 +3,8 @@
   'use strict';
   var D = window.DATA, $ = App.$;
 
-  function img(seed, w, h) { return 'https://picsum.photos/seed/' + seed + '/' + w + '/' + h; }
+  // Numeric ids pin a specific Picsum photo (all landscapes); anything else is a random seed.
+  function img(seed, w, h) { return 'https://picsum.photos/' + (/^\d+$/.test(String(seed)) ? 'id/' : 'seed/') + seed + '/' + w + '/' + h; }
   App.img = img;
 
   // ------------------------------------------------------------ full-screen takeovers

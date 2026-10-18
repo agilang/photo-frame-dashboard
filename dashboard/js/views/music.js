@@ -168,6 +168,9 @@
   }
 
   function render() {
+    // Keep the live iframe node across re-renders so playback isn't restarted
+    var liveFrame = viewEl.querySelector('.music-player iframe');
+    if (liveFrame && liveFrame.parentNode) liveFrame.parentNode.removeChild(liveFrame);
     viewEl.innerHTML = '<div class="music-view' + (playerExpanded ? ' is-expanded' : '') + '">' +
       '<header class="music-head"><div><div class="label">Listen together</div><h1>Music</h1></div>' +
       '<span class="music-free-badge">YouTube search + Spotify links</span></header>' +
@@ -196,6 +199,11 @@
       '<h2>Your music, on the frame</h2><p>Search for a YouTube song or artist above and tap a result. For Spotify, paste a track, album, playlist, artist, or show link. Your selection is saved only in this browser.</p></section>' +
       '<p class="music-note">Free playback depends on the provider, account, and content. YouTube may show ads; Spotify may require sign-in and may limit playback. Use the embedded controls to start playback—autoplay is disabled.</p>' +
       '</div>';
+    if (liveFrame && savedUrl && !musicTimerExpired) {
+      var embed = getEmbed(savedUrl);
+      var fresh = viewEl.querySelector('.music-player iframe');
+      if (embed && liveFrame.src === embed.url && fresh) fresh.parentNode.replaceChild(liveFrame, fresh);
+    }
     renderPlayer();
     var searchInput = viewEl.querySelector('[name="musicSearch"]');
     searchInput.value = searchQuery;
@@ -203,7 +211,8 @@
   }
 
   App.register('music', {
-    show: function (el) {
+    show: function (el, opts) {
+      opts = opts || {};
       viewEl = el;
       if (!el.dataset.musicBound) {
         el.dataset.musicBound = 'true';
@@ -289,14 +298,15 @@
           render();
         });
       }
-      render();
-    },
-    hide: function () {
-      if (!viewEl) return;
-      var frame = viewEl.querySelector('.music-player iframe');
-      if (frame && !musicTimerDeadline) frame.src = 'about:blank';
+      // Only build once; rebuilding would reload the iframe and stop the music
+      if (!el.querySelector('.music-view') || opts.rerender) render();
     }
   });
+
+  // Don't auto-leave the Music tab (or dim to the photo frame) while a player is loaded.
+  App.holdIdle = function () {
+    return App.current === 'music' && !!savedUrl && !musicTimerExpired && !!getEmbed(savedUrl);
+  };
 
   App.on('second', function () {
     if (musicTimerDeadline && Date.now() >= musicTimerDeadline) stopPlayback();

@@ -349,7 +349,7 @@ trusting it, and remember that a past approval is not permission for a new write
 - [Google APIs](https://developers.google.com/) provide the optional Calendar and Tasks integration.
 - [ha-eufy-sdk-bridge](https://github.com/mega-yfue/ha-eufy-sdk-bridge) and
   [go2rtc](https://github.com/AlexxIT/go2rtc) enable optional local-network Eufy camera playback.
-- [Plus Jakarta Sans](https://fonts.google.com/specimen/Plus+Jakarta+Sans) is loaded from Google Fonts.
+- [Plus Jakarta Sans](https://fonts.google.com/specimen/Plus+Jakarta+Sans) is self-hosted (SIL Open Font License).
 - The optional music screen embeds media using the official [YouTube](https://www.youtube.com/)
   and [Spotify](https://open.spotify.com/) players. Playback and account restrictions are set by
   those providers.

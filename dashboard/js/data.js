@@ -164,9 +164,9 @@ window.DATA = (function () {
   var climate = { current: 20.5, set: 21.5, mode: 'heat', humidity: 42, outside: 14 };
   var media = { room: 'Kitchen', title: 'Harvest Moon', artist: 'Neil Young', playing: true, volume: 35, seed: 'harvest-vinyl' };
   var cameras = [
-    { id: 'c-front', name: 'Front Porch', seed: 'porch-steps' },
-    { id: 'c-drive', name: 'Driveway', seed: 'driveway-maple' },
-    { id: 'c-yard', name: 'Backyard', seed: 'garden-yard' }
+    { id: 'c-front', name: 'Front Porch', seed: '59' },
+    { id: 'c-drive', name: 'Driveway', seed: '17' },
+    { id: 'c-yard', name: 'Backyard', seed: '92' }
   ];
   var scenes = [
     { id: 'morning', name: 'Morning', icon: 'sunrise', set: { 'k-pend': 100, 'k-under': 80, 'l-blinds': 100, 'l-lamp': 0, 'u-hall': 60 } },
@@ -197,26 +197,26 @@ window.DATA = (function () {
   var t = new Date(base);
   var mmdd = ('0' + (t.getMonth() + 1)).slice(-2) + '-' + ('0' + t.getDate()).slice(-2);
   var photos = [
-    { seed: 'tofino-surf', o: 'l', date: '2021-' + mmdd, place: 'Tofino, BC', from: 'parvathi', tag: 'tofino' },
-    { seed: 'cottage-dock', o: 'l', date: '2023-08-12', place: 'Lake of Bays', from: 'agilan', tag: 'cottage' },
-    { seed: 'sharvikaa-kite', o: 'p', date: '2024-05-19', place: 'Humber Bay Park', from: 'parvathi', tag: 'spring24' },
-    { seed: 'sai-kite', o: 'p', date: '2024-05-19', place: 'Humber Bay Park', from: 'agilan', tag: 'spring24' },
-    { seed: 'autumn-walk', o: 'l', date: '2022-10-09', place: 'High Park', from: 'agilan', tag: 'fall22' },
-    { seed: 'birthday-cake', o: 'p', date: '2025-10-12', place: 'Home', from: 'parvathi', tag: 'bday25' },
-    { seed: 'candles-lit', o: 'p', date: '2025-10-12', place: 'Home', from: 'agilan', tag: 'bday25' },
-    { seed: 'mountain-lake', o: 'l', date: '2019-' + mmdd, place: 'Banff, AB', from: 'agilan', tag: 'banff' },
-    { seed: 'snow-day', o: 'l', date: '2024-01-21', place: 'Riverdale Hill', from: 'parvathi', tag: 'winter24' },
-    { seed: 'beach-dunes', o: 'l', date: '2023-07-02', place: 'Sandbanks', from: 'sharvikaa', tag: 'sandbanks' },
-    { seed: 'city-night', o: 'l', date: '2022-12-18', place: 'Nathan Phillips Sq.', from: 'parvathi', tag: 'xmas22' },
-    { seed: 'garden-bloom', o: 'p', date: '2025-06-08', place: 'Backyard', from: 'sai', tag: 'garden' },
-    { seed: 'tomato-haul', o: 'p', date: '2025-06-08', place: 'Backyard', from: 'sharvikaa', tag: 'garden' },
-    { seed: 'road-trip', o: 'l', date: '2024-08-04', place: 'Cabot Trail, NS', from: 'agilan', tag: 'ns' },
-    { seed: 'campfire', o: 'l', date: '2024-08-06', place: 'Cape Breton', from: 'parvathi', tag: 'ns' },
-    { seed: 'forest-path', o: 'l', date: '2020-09-26', place: 'Algonquin', from: 'agilan', tag: 'algonquin' },
-    { seed: 'pancakes', o: 'p', date: '2026-03-14', place: 'Home', from: 'sharvikaa', tag: 'pancakes' },
-    { seed: 'sugar-shack', o: 'p', date: '2026-03-14', place: 'Sugar Shack', from: 'parvathi', tag: 'pancakes' },
-    { seed: 'harbour-sail', o: 'l', date: '2025-07-19', place: 'Toronto Harbour', from: 'sai', tag: 'sail' },
-    { seed: 'pumpkins', o: 'l', date: '2025-10-25', place: "Chudleigh's", from: 'sharvikaa', tag: 'fall25' }
+    { seed: '29', o: 'l', date: '2019-' + mmdd, place: 'Banff, AB', from: 'agilan', tag: 'banff' },
+    { seed: '16', o: 'l', date: '2021-' + mmdd, place: 'Tofino, BC', from: 'parvathi', tag: 'tofino' },
+    { seed: '11', o: 'l', date: '2023-08-12', place: 'Lake of Bays', from: 'agilan', tag: 'cottage' },
+    { seed: '15', o: 'p', date: '2020-09-26', place: 'Algonquin', from: 'agilan', tag: 'algonquin' },
+    { seed: '17', o: 'p', date: '2022-10-09', place: 'High Park', from: 'agilan', tag: 'fall22' },
+    { seed: '58', o: 'p', date: '2024-08-04', place: 'Peggys Cove, NS', from: 'agilan', tag: 'ns' },
+    { seed: '54', o: 'p', date: '2024-08-06', place: 'Cape Breton', from: 'parvathi', tag: 'ns' },
+    { seed: '13', o: 'l', date: '2023-07-02', place: 'Sandbanks', from: 'sharvikaa', tag: 'sandbanks' },
+    { seed: '12', o: 'l', date: '2024-08-05', place: 'Cabot Trail, NS', from: 'parvathi', tag: 'ns' },
+    { seed: '28', o: 'l', date: '2020-09-27', place: 'Algonquin', from: 'agilan', tag: 'algonquin' },
+    { seed: '10', o: 'l', date: '2025-06-08', place: 'Prince Edward County', from: 'sai', tag: 'pec' },
+    { seed: '47', o: 'l', date: '2025-07-19', place: 'Toronto Harbour', from: 'sai', tag: 'sail' },
+    { seed: '52', o: 'l', date: '2024-07-14', place: 'Wasaga Beach', from: 'sharvikaa', tag: 'wasaga' },
+    { seed: '59', o: 'p', date: '2025-10-25', place: "Chudleigh's", from: 'sharvikaa', tag: 'fall25' },
+    { seed: '100', o: 'l', date: '2023-07-03', place: 'Sandbanks', from: 'parvathi', tag: 'sandbanks' },
+    { seed: '110', o: 'l', date: '2022-10-10', place: 'Bruce Peninsula', from: 'agilan', tag: 'fall22' },
+    { seed: '116', o: 'l', date: '2024-09-02', place: 'Niagara-on-the-Lake', from: 'parvathi', tag: 'niagara' },
+    { seed: '66', o: 'l', date: '2024-01-21', place: 'Blue Mountain', from: 'parvathi', tag: 'winter24' },
+    { seed: '38', o: 'l', date: '2025-08-16', place: 'Georgian Bay', from: 'agilan', tag: 'gb' },
+    { seed: '37', o: 'l', date: '2022-08-20', place: 'Bruce Peninsula', from: 'sai', tag: 'bruce' }
   ];
 
   // ---------------------------------------------------------------- AI agent usage (CodexBar-style)
