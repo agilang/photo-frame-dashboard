@@ -5,11 +5,24 @@
 Home HQ brings the family calendar, weather, chores, shopping list, photos and optional cameras
 together in a touch-friendly display designed to stay visible across the room.
 
-<p align="center">
-  <img src="docs/images/home-hq-today.png" alt="Home HQ Today screen showing the clock, weather, family schedule, chores, shopping and camera status" width="100%">
-</p>
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/home-hq-day.png" alt="Home HQ Today screen in day mode" width="100%"><br><em>Day mode</em></td>
+    <td align="center"><img src="docs/images/home-hq-night.png" alt="Home HQ Today screen in night mode" width="100%"><br><em>Night mode</em></td>
+  </tr>
+</table>
 
-<p align="center"><em>Today screen · example view with sample dashboard data</em></p>
+<p align="center"><em>Today screen · example view with sample data (names and location are placeholders)</em></p>
+
+## Day and night modes
+
+- **Day:** a light, frosted-glass look with a graphite accent and the self-hosted Geist font. Cards,
+  rail and hero share one palette, and the Today hero shows a landscape photo when nothing is scheduled.
+- **Night:** a dark dashboard (`nightdash`) with dimmed cards for evening use. After a short idle time
+  it falls back to the full-screen night clock, and the photo-frame ambient screen shows the same
+  countdown for any running timer.
+- **Always on:** the YouTube/Spotify player keeps playing while background syncs (calendar, weather,
+  cameras) refresh, and the on-screen keyboard no longer shrinks the stage.
 
 **Explore:** [Run the dashboard](#run-the-dashboard-locally) · [Supported frames](#working-frames) ·
 [Find your setup guide](#which-frame-do-you-have) · [Credits](#credits-and-services)
@@ -22,16 +35,16 @@ following any device-level instructions.
 
 ## Working frames
 
-<a href="https://amzn.to/4zneGNM"><img src="docs/images/devices/B0GHR65YYX.jpg" width="110" alt="10.1&quot; frame from the video (now often ships the PF1007L)" title="10.1&quot; frame from the video (now often ships the PF1007L)"></a>
-<a href="https://amzn.to/4B38DQ0"><img src="docs/images/devices/B0FSZ86HTM.jpg" width="110" alt="Runxion 10.1&quot; Frameo" title="Runxion 10.1&quot; Frameo"></a>
-<a href="https://amzn.to/4zwU6e0"><img src="docs/images/devices/B0GCCFPHZ4.jpg" width="110" alt="15.6&quot; Frameo" title="15.6&quot; Frameo"></a>
-<a href="https://www.amazon.com/dp/B0CQN2PKQR?tag=webo080-20"><img src="docs/images/devices/B0CQN2PKQR.jpg" width="110" alt="Pastigio FRAME156 15.6&quot; Frameo" title="Pastigio FRAME156 15.6&quot; Frameo"></a>
-<a href="https://www.amazon.com/dp/B0D8J5PNFH?tag=webo080-20"><img src="docs/images/devices/B0D8J5PNFH.jpg" width="110" alt="Dragon Touch Modern10 Charm" title="Dragon Touch Modern10 Charm"></a>
-<a href="https://www.amazon.com/dp/B0C9V811L6?tag=webo080-20"><img src="docs/images/devices/B0C9V811L6.jpg" width="110" alt="Skylight Calendar 15&quot;" title="Skylight Calendar 15&quot;"></a>
+<a href="docs/devices.md"><img src="docs/images/devices/B0GHR65YYX.jpg" width="110" alt="10.1&quot; frame from the video (now often ships the PF1007L)" title="10.1&quot; frame from the video (now often ships the PF1007L)"></a>
+<a href="docs/devices.md"><img src="docs/images/devices/B0FSZ86HTM.jpg" width="110" alt="Runxion 10.1&quot; Frameo" title="Runxion 10.1&quot; Frameo"></a>
+<a href="docs/devices.md"><img src="docs/images/devices/B0GCCFPHZ4.jpg" width="110" alt="15.6&quot; Frameo" title="15.6&quot; Frameo"></a>
+<a href="https://www.amazon.com/dp/B0CQN2PKQR"><img src="docs/images/devices/B0CQN2PKQR.jpg" width="110" alt="Pastigio FRAME156 15.6&quot; Frameo" title="Pastigio FRAME156 15.6&quot; Frameo"></a>
+<a href="https://www.amazon.com/dp/B0D8J5PNFH"><img src="docs/images/devices/B0D8J5PNFH.jpg" width="110" alt="Dragon Touch Modern10 Charm" title="Dragon Touch Modern10 Charm"></a>
+<a href="https://www.amazon.com/dp/B0C9V811L6"><img src="docs/images/devices/B0C9V811L6.jpg" width="110" alt="Skylight Calendar 15&quot;" title="Skylight Calendar 15&quot;"></a>
 <a href="https://www.amazon.es/dp/B0GGB7LWX8"><img src="docs/images/devices/B0GGB7LWX8.jpg" width="110" alt="Humblestead 10.1&quot; (Amazon Spain, PF1007L)" title="Humblestead 10.1&quot; (Amazon Spain, PF1007L)"></a>
 <a href="https://www.amazon.ca/dp/B0H4W1YPHH"><img src="docs/images/devices/B0H4W1YPHH.jpg" width="110" alt="Anna Bella 10.1&quot; (Amazon Canada, PF1007L)" title="Anna Bella 10.1&quot; (Amazon Canada, PF1007L)"></a>
 
-Frames confirmed to work (Amazon affiliate links). See the **[device index](docs/devices.md)** for every
+Frames confirmed to work (product photos link to the device index). See the **[device index](docs/devices.md)** for every
 frame, which board it has, and where to start.
 
 ## Community builds
@@ -160,7 +173,7 @@ commit them.
    [Open-Meteo](https://open-meteo.com/). Tap the weather card to switch between hourly and 7-day
    forecasts, change Celsius/Fahrenheit, search for cities, and choose the active forecast. These
    preferences are stored in that browser.
-   The initial default is Little Elm, TX 75068 (`33.16262, -96.93751`); override it with
+   The initial default is Austin, TX 78701 (`30.2672, -97.7431`); override it with
    `WEATHER_LOCATION`, `WEATHER_LAT`, and `WEATHER_LON` in `.dev.vars` if needed. It does not use
    browser geolocation. The clock uses the device's local time and timezone.
 - **Stocks:** the Stocks screen uses Finnhub's quote endpoint through the Worker. Create a Finnhub

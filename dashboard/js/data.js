@@ -4,13 +4,13 @@ window.DATA = (function () {
   base.setHours(0, 0, 0, 0);
   var n = 0;
 
-  var ALL = ['agilan', 'parvathi', 'sharvikaa', 'sai'];
+  var ALL = ['alex', 'jordan', 'casey', 'sam'];
 
   var people = [
-    { id: 'agilan', name: 'Agilan', color: '#2D5BFF', rgb: '45 91 255', ink: '#FFFFFF', home: false, status: 'Away' },
-    { id: 'parvathi', name: 'Parvathi', color: '#E4007C', rgb: '228 0 124', ink: '#FFFFFF', home: false, status: 'Away' },
-    { id: 'sharvikaa', name: 'Sharvikaa', color: '#00A36C', rgb: '0 163 108', ink: '#FFFFFF', home: true, status: 'Home' },
-    { id: 'sai', name: 'Sai', color: '#FFB000', rgb: '255 176 0', ink: '#111111', home: true, status: 'Home' }
+    { id: 'alex', name: 'Alex', color: '#2D5BFF', rgb: '45 91 255', ink: '#FFFFFF', home: false, status: 'Away' },
+    { id: 'jordan', name: 'Jordan', color: '#E4007C', rgb: '228 0 124', ink: '#FFFFFF', home: false, status: 'Away' },
+    { id: 'casey', name: 'Casey', color: '#00A36C', rgb: '0 163 108', ink: '#FFFFFF', home: true, status: 'Home' },
+    { id: 'sam', name: 'Sam', color: '#FFB000', rgb: '255 176 0', ink: '#111111', home: true, status: 'Home' }
   ];
   var family = { id: 'family', name: 'Family', color: '#111111', rgb: '17 17 17', ink: '#FFFFFF' };
 
@@ -28,45 +28,45 @@ window.DATA = (function () {
     return Object.assign({ id: 'c' + (++cid), r: r, who: who, title: title, emoji: emoji, stars: stars, done: !!done }, extra || {});
   }
   var chores = [
-    chore('morning', 'sharvikaa', 'Make bed', '🛏️', 1, true),
-    chore('morning', 'sharvikaa', 'Brush teeth', '🪥', 1, true),
-    chore('morning', 'sharvikaa', 'Pack school bag and water bottle', '🎒', 1, true),
-    chore('morning', 'sai', 'Make bed', '🛏️', 1, true),
-    chore('morning', 'sai', 'Brush teeth', '🪥', 1, true),
-    chore('morning', 'sai', 'Get dressed for school', '👕', 1, false),
-    chore('morning', 'agilan', 'School drop-off', '🚗', 0, true),
-    chore('morning', 'parvathi', 'Pack school tiffins', '🍱', 0, true),
+    chore('morning', 'casey', 'Make bed', '🛏️', 1, true),
+    chore('morning', 'casey', 'Brush teeth', '🪥', 1, true),
+    chore('morning', 'casey', 'Pack school bag and water bottle', '🎒', 1, true),
+    chore('morning', 'sam', 'Make bed', '🛏️', 1, true),
+    chore('morning', 'sam', 'Brush teeth', '🪥', 1, true),
+    chore('morning', 'sam', 'Get dressed for school', '👕', 1, false),
+    chore('morning', 'alex', 'School drop-off', '🚗', 0, true),
+    chore('morning', 'jordan', 'Pack school tiffins', '🍱', 0, true),
     chore('morning', 'any', 'Water the plants', '🪴', 1, false),
 
-    chore('after', 'sharvikaa', 'Empty and rinse tiffin box', '🍱', 1, true),
-    chore('after', 'sharvikaa', 'Homework', '📚', 2, false),
-    chore('after', 'sharvikaa', 'Put away school bag', '🎒', 1, false),
-    chore('after', 'sai', 'Empty and rinse tiffin box', '🍱', 1, true),
-    chore('after', 'sai', 'Read for 20 min', '📖', 2, false),
-    chore('after', 'sai', 'Practice piano', '🎹', 2, false),
-    chore('after', 'sai', 'Practice an instrument', '🎹', 2, false),
-    chore('after', 'sai', 'Put away toys', '🧸', 1, false),
-    chore('after', 'agilan', 'Take out recycling', '♻️', 0, false),
-    chore('after', 'agilan', 'Check school messages', '📱', 0, true),
-    chore('after', 'parvathi', 'Fold laundry', '🧺', 0, false),
+    chore('after', 'casey', 'Empty and rinse tiffin box', '🍱', 1, true),
+    chore('after', 'casey', 'Homework', '📚', 2, false),
+    chore('after', 'casey', 'Put away school bag', '🎒', 1, false),
+    chore('after', 'sam', 'Empty and rinse tiffin box', '🍱', 1, true),
+    chore('after', 'sam', 'Read for 20 min', '📖', 2, false),
+    chore('after', 'sam', 'Practice piano', '🎹', 2, false),
+    chore('after', 'sam', 'Practice an instrument', '🎹', 2, false),
+    chore('after', 'sam', 'Put away toys', '🧸', 1, false),
+    chore('after', 'alex', 'Take out recycling', '♻️', 0, false),
+    chore('after', 'alex', 'Check school messages', '📱', 0, true),
+    chore('after', 'jordan', 'Fold laundry', '🧺', 0, false),
     chore('after', 'any', 'Rinse and soak dal for dinner', '🥣', 1, false),
     chore('after', 'any', 'Start rice cooker for dinner', '🍚', 1, false),
     chore('after', 'any', 'Water the plants', '🪴', 1, false),
 
-    chore('evening', 'sharvikaa', 'Set the table', '🍴', 1, false),
-    chore('evening', 'sharvikaa', 'Set out school uniform', '👕', 1, false),
-    chore('evening', 'sharvikaa', 'Shower', '🚿', 1, false),
-    chore('evening', 'sai', 'Clear plates and lunch containers', '🍽️', 1, false),
-    chore('evening', 'sai', 'Bath', '🛁', 1, false),
-    chore('evening', 'sai', 'Set out school uniform', '👕', 1, false),
-    chore('evening', 'agilan', 'Lock up', '🔐', 0, false),
-    chore('evening', 'parvathi', 'Wash and dry tiffin boxes', '🫧', 0, false),
+    chore('evening', 'casey', 'Set the table', '🍴', 1, false),
+    chore('evening', 'casey', 'Set out school uniform', '👕', 1, false),
+    chore('evening', 'casey', 'Shower', '🚿', 1, false),
+    chore('evening', 'sam', 'Clear plates and lunch containers', '🍽️', 1, false),
+    chore('evening', 'sam', 'Bath', '🛁', 1, false),
+    chore('evening', 'sam', 'Set out school uniform', '👕', 1, false),
+    chore('evening', 'alex', 'Lock up', '🔐', 0, false),
+    chore('evening', 'jordan', 'Wash and dry tiffin boxes', '🫧', 0, false),
     chore('evening', 'any', 'Wipe kitchen counters and stovetop', '🧽', 1, false),
     chore('evening', 'any', 'Take out kitchen rubbish', '🗑️', 1, false)
   ];
-  var stars = { sharvikaa: 42, sai: 57 };
+  var stars = { casey: 42, sam: 57 };
   // Mon..Sun, 1 = all chores done, 0 = missed, null = future
-  var week = { sharvikaa: [1, 1, 0, 1, 1, 0, 1], sai: [1, 0, 1, 1, 1, 1, 0] };
+  var week = { casey: [1, 1, 0, 1, 1, 0, 1], sam: [1, 0, 1, 1, 1, 1, 0] };
 
   // ---------------------------------------------------------------- shopping
   var stores = [{ id: 'grocer', name: 'Indian Grocery' }, { id: 'costco', name: 'Costco' }];
@@ -153,8 +153,8 @@ window.DATA = (function () {
     { id: 'e-porch', room: 'entry', type: 'light', name: 'Porch', on: true, level: 100 },
     { id: 'g-door', room: 'entry', type: 'garage', name: 'Garage', state: 'closed' },
     { id: 'g-side', room: 'entry', type: 'lock', name: 'Side Door', locked: true },
-    { id: 'u-sharvikaa', room: 'upstairs', type: 'light', name: "Sharvikaa's Lamp", on: true, level: 30 },
-    { id: 'u-sai', room: 'upstairs', type: 'light', name: "Sai's Nightlight", on: false, level: 15 },
+    { id: 'u-casey', room: 'upstairs', type: 'light', name: "Casey's Lamp", on: true, level: 30 },
+    { id: 'u-sam', room: 'upstairs', type: 'light', name: "Sam's Nightlight", on: false, level: 15 },
     { id: 'u-hall', room: 'upstairs', type: 'light', name: 'Hallway', on: false, level: 60 },
     { id: 'u-bath', room: 'upstairs', type: 'light', name: 'Bathroom', on: false, level: 100 },
     { id: 'y-string', room: 'yard', type: 'light', name: 'String Lights', on: false, level: 100, flaky: true },
@@ -172,13 +172,13 @@ window.DATA = (function () {
     { id: 'morning', name: 'Morning', icon: 'sunrise', set: { 'k-pend': 100, 'k-under': 80, 'l-blinds': 100, 'l-lamp': 0, 'u-hall': 60 } },
     { id: 'dinner', name: 'Dinner', icon: 'utensils', set: { 'k-pend': 55, 'k-under': 30, 'k-island': 70, 'l-lamp': 40, 'l-ceil': 0 } },
     { id: 'movie', name: 'Movie', icon: 'film', set: { 'k-pend': 0, 'k-under': 15, 'k-island': 0, 'l-lamp': 15, 'l-ceil': 0, 'l-blinds': 0, 'l-fire': 30 } },
-    { id: 'away', name: 'Away', icon: 'away', set: { 'k-pend': 0, 'k-under': 0, 'k-island': 0, 'l-lamp': 0, 'l-ceil': 0, 'l-fire': 0, 'u-sharvikaa': 0, 'u-hall': 0, 'e-porch': 100 } },
-    { id: 'night', name: 'Goodnight', icon: 'moon', set: { 'k-pend': 0, 'k-under': 10, 'k-island': 0, 'l-lamp': 0, 'l-ceil': 0, 'l-fire': 0, 'u-hall': 10, 'u-sai': 15, 'e-porch': 0 } }
+    { id: 'away', name: 'Away', icon: 'away', set: { 'k-pend': 0, 'k-under': 0, 'k-island': 0, 'l-lamp': 0, 'l-ceil': 0, 'l-fire': 0, 'u-casey': 0, 'u-hall': 0, 'e-porch': 100 } },
+    { id: 'night', name: 'Goodnight', icon: 'moon', set: { 'k-pend': 0, 'k-under': 10, 'k-island': 0, 'l-lamp': 0, 'l-ceil': 0, 'l-fire': 0, 'u-hall': 10, 'u-sam': 15, 'e-porch': 0 } }
   ];
 
   // ---------------------------------------------------------------- weather (index = hour of day)
   var weather = {
-    location: 'Little Elm, TX 75068', latitude: 33.16262, longitude: -96.93751, timezone: 'America/Chicago', hi: 17, lo: 8, feels: -2, humidity: 71, wind: 18,
+    location: 'Austin, TX 78701', latitude: 30.2672, longitude: -97.7431, timezone: 'America/Chicago', hi: 17, lo: 8, feels: -2, humidity: 71, wind: 18,
     days: [
       { offset: 0, hi: 17, lo: 8, c: 'partly', p: 10 },
       { offset: 1, hi: 18, lo: 7, c: 'sun', p: 0 },
@@ -197,26 +197,26 @@ window.DATA = (function () {
   var t = new Date(base);
   var mmdd = ('0' + (t.getMonth() + 1)).slice(-2) + '-' + ('0' + t.getDate()).slice(-2);
   var photos = [
-    { seed: '29', o: 'l', date: '2019-' + mmdd, place: 'Banff, AB', from: 'agilan', tag: 'banff' },
-    { seed: '16', o: 'l', date: '2021-' + mmdd, place: 'Tofino, BC', from: 'parvathi', tag: 'tofino' },
-    { seed: '11', o: 'l', date: '2023-08-12', place: 'Lake of Bays', from: 'agilan', tag: 'cottage' },
-    { seed: '15', o: 'p', date: '2020-09-26', place: 'Algonquin', from: 'agilan', tag: 'algonquin' },
-    { seed: '17', o: 'p', date: '2022-10-09', place: 'High Park', from: 'agilan', tag: 'fall22' },
-    { seed: '58', o: 'p', date: '2024-08-04', place: 'Peggys Cove, NS', from: 'agilan', tag: 'ns' },
-    { seed: '54', o: 'p', date: '2024-08-06', place: 'Cape Breton', from: 'parvathi', tag: 'ns' },
-    { seed: '13', o: 'l', date: '2023-07-02', place: 'Sandbanks', from: 'sharvikaa', tag: 'sandbanks' },
-    { seed: '12', o: 'l', date: '2024-08-05', place: 'Cabot Trail, NS', from: 'parvathi', tag: 'ns' },
-    { seed: '28', o: 'l', date: '2020-09-27', place: 'Algonquin', from: 'agilan', tag: 'algonquin' },
-    { seed: '10', o: 'l', date: '2025-06-08', place: 'Prince Edward County', from: 'sai', tag: 'pec' },
-    { seed: '47', o: 'l', date: '2025-07-19', place: 'Toronto Harbour', from: 'sai', tag: 'sail' },
-    { seed: '52', o: 'l', date: '2024-07-14', place: 'Wasaga Beach', from: 'sharvikaa', tag: 'wasaga' },
-    { seed: '59', o: 'p', date: '2025-10-25', place: "Chudleigh's", from: 'sharvikaa', tag: 'fall25' },
-    { seed: '100', o: 'l', date: '2023-07-03', place: 'Sandbanks', from: 'parvathi', tag: 'sandbanks' },
-    { seed: '110', o: 'l', date: '2022-10-10', place: 'Bruce Peninsula', from: 'agilan', tag: 'fall22' },
-    { seed: '116', o: 'l', date: '2024-09-02', place: 'Niagara-on-the-Lake', from: 'parvathi', tag: 'niagara' },
-    { seed: '66', o: 'l', date: '2024-01-21', place: 'Blue Mountain', from: 'parvathi', tag: 'winter24' },
-    { seed: '38', o: 'l', date: '2025-08-16', place: 'Georgian Bay', from: 'agilan', tag: 'gb' },
-    { seed: '37', o: 'l', date: '2022-08-20', place: 'Bruce Peninsula', from: 'sai', tag: 'bruce' }
+    { seed: '29', o: 'l', date: '2019-' + mmdd, place: 'Banff, AB', from: 'alex', tag: 'banff' },
+    { seed: '16', o: 'l', date: '2021-' + mmdd, place: 'Tofino, BC', from: 'jordan', tag: 'tofino' },
+    { seed: '11', o: 'l', date: '2023-08-12', place: 'Lake of Bays', from: 'alex', tag: 'cottage' },
+    { seed: '15', o: 'p', date: '2020-09-26', place: 'Algonquin', from: 'alex', tag: 'algonquin' },
+    { seed: '17', o: 'p', date: '2022-10-09', place: 'High Park', from: 'alex', tag: 'fall22' },
+    { seed: '58', o: 'p', date: '2024-08-04', place: 'Peggys Cove, NS', from: 'alex', tag: 'ns' },
+    { seed: '54', o: 'p', date: '2024-08-06', place: 'Cape Breton', from: 'jordan', tag: 'ns' },
+    { seed: '13', o: 'l', date: '2023-07-02', place: 'Sandbanks', from: 'casey', tag: 'sandbanks' },
+    { seed: '12', o: 'l', date: '2024-08-05', place: 'Cabot Trail, NS', from: 'jordan', tag: 'ns' },
+    { seed: '28', o: 'l', date: '2020-09-27', place: 'Algonquin', from: 'alex', tag: 'algonquin' },
+    { seed: '10', o: 'l', date: '2025-06-08', place: 'Prince Edward County', from: 'sam', tag: 'pec' },
+    { seed: '47', o: 'l', date: '2025-07-19', place: 'Toronto Harbour', from: 'sam', tag: 'sail' },
+    { seed: '52', o: 'l', date: '2024-07-14', place: 'Wasaga Beach', from: 'casey', tag: 'wasaga' },
+    { seed: '59', o: 'p', date: '2025-10-25', place: "Chudleigh's", from: 'casey', tag: 'fall25' },
+    { seed: '100', o: 'l', date: '2023-07-03', place: 'Sandbanks', from: 'jordan', tag: 'sandbanks' },
+    { seed: '110', o: 'l', date: '2022-10-10', place: 'Bruce Peninsula', from: 'alex', tag: 'fall22' },
+    { seed: '116', o: 'l', date: '2024-09-02', place: 'Niagara-on-the-Lake', from: 'jordan', tag: 'niagara' },
+    { seed: '66', o: 'l', date: '2024-01-21', place: 'Blue Mountain', from: 'jordan', tag: 'winter24' },
+    { seed: '38', o: 'l', date: '2025-08-16', place: 'Georgian Bay', from: 'alex', tag: 'gb' },
+    { seed: '37', o: 'l', date: '2022-08-20', place: 'Bruce Peninsula', from: 'sam', tag: 'bruce' }
   ];
 
   // ---------------------------------------------------------------- AI agent usage (CodexBar-style)

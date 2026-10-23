@@ -36,8 +36,7 @@ the date.
   the Device cell, then `<br>` and the name. Columns: Device, SoC and Android, ADB out of the box,
   Root, Start with, Where owners bought it.
 - Device thumbnails come from the Amazon listing (owner-approved), resized to 240 px, saved as
-  `docs/images/devices/<ASIN>.jpg`. Affiliate tag for amazon.com links: `webo080-20`. Amazon links
-  the owner gives are confirmed working.
+  `docs/images/devices/<ASIN>.jpg`. Use plain Amazon links (no affiliate tags).
 - `docs/community-builds.md` lists **picture frames only** (no e-ink, no Raspberry Pi builds), newest
   first, with neutral descriptions (no assumed pronouns, no curation notes).
 - The README stays short: description, TLDR, working frames (thumbnails), community builds teaser,

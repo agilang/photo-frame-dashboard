@@ -322,9 +322,9 @@ async function weather(env, url) {
   const hasLatitude = url.searchParams.has("latitude");
   const hasLongitude = url.searchParams.has("longitude");
   if (hasLatitude !== hasLongitude) return failure("Latitude and longitude must be provided together", 400);
-  const latitude = hasLatitude ? Number(url.searchParams.get("latitude")) : Number(env.WEATHER_LAT || "33.16262");
-  const longitude = hasLongitude ? Number(url.searchParams.get("longitude")) : Number(env.WEATHER_LON || "-96.93751");
-  const location = (url.searchParams.get("location") || env.WEATHER_LOCATION || "Little Elm, TX 75068").trim();
+  const latitude = hasLatitude ? Number(url.searchParams.get("latitude")) : Number(env.WEATHER_LAT || "30.2672");
+  const longitude = hasLongitude ? Number(url.searchParams.get("longitude")) : Number(env.WEATHER_LON || "-97.7431");
+  const location = (url.searchParams.get("location") || env.WEATHER_LOCATION || "Austin, TX 78701").trim();
   if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 ||
       !Number.isFinite(longitude) || longitude < -180 || longitude > 180 ||
       !location || location.length > 100) {

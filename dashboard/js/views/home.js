@@ -28,7 +28,7 @@
       '<div class="h-wx-top">' +
       '<span class="h-wx-icon" data-weather-cond="' + App.esc(w.cond) + '">' + App.icon(w.cond, 60) + '</span>' +
       '<span class="h-wx-temp num">' + window.DASHBOARD_INTEGRATIONS.temperature(w.temp) + '°</span>' +
-      '<span class="h-wx-meta"><b>' + w.label + '</b><span>H ' + window.DASHBOARD_INTEGRATIONS.temperature(w.hi) + '°  L ' + window.DASHBOARD_INTEGRATIONS.temperature(w.lo) + '° · ' + weatherPrefs.unit + '</span><span class="h-wx-location">' + App.esc(w.location || 'Little Elm, TX 75068') + '</span></span>' +
+      '<span class="h-wx-meta"><b>' + w.label + '</b><span>H ' + window.DASHBOARD_INTEGRATIONS.temperature(w.hi) + '°  L ' + window.DASHBOARD_INTEGRATIONS.temperature(w.lo) + '° · ' + weatherPrefs.unit + '</span><span class="h-wx-location">' + App.esc(w.location || 'Austin, TX 78701') + '</span></span>' +
       '</div>' +
       '<div class="h-wx-say"><b>' + w.summary + '.</b> ' + w.advice + '.</div>' +
       '<div class="h-wx-hours">' + hours.map(function (h) {
