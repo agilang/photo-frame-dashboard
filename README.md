@@ -24,6 +24,56 @@ together in a touch-friendly display designed to stay visible across the room.
 - **Always on:** the YouTube/Spotify player keeps playing while background syncs (calendar, weather,
   cameras) refresh, and the on-screen keyboard no longer shrinks the stage.
 
+## Screenshots of every tab
+
+<details>
+<summary>Day and night views of all ten tabs (sample data)</summary>
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/tabs/home-day.png" alt="Today, day mode" width="100%"><br><sub>Today · day</sub></td>
+    <td align="center"><img src="docs/images/tabs/home-night.png" alt="Today, night mode" width="100%"><br><sub>Today · night</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/tabs/calendar-day.png" alt="Calendar, day mode" width="100%"><br><sub>Calendar · day</sub></td>
+    <td align="center"><img src="docs/images/tabs/calendar-night.png" alt="Calendar, night mode" width="100%"><br><sub>Calendar · night</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/tabs/tasks-day.png" alt="Chores, day mode" width="100%"><br><sub>Chores · day</sub></td>
+    <td align="center"><img src="docs/images/tabs/tasks-night.png" alt="Chores, night mode" width="100%"><br><sub>Chores · night</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/tabs/shopping-day.png" alt="Shopping, day mode" width="100%"><br><sub>Shopping · day</sub></td>
+    <td align="center"><img src="docs/images/tabs/shopping-night.png" alt="Shopping, night mode" width="100%"><br><sub>Shopping · night</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/tabs/photos-day.png" alt="Photos, day mode" width="100%"><br><sub>Photos · day</sub></td>
+    <td align="center"><img src="docs/images/tabs/photos-night.png" alt="Photos, night mode" width="100%"><br><sub>Photos · night</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/tabs/control-day.png" alt="Cameras (no bridge configured), day mode" width="100%"><br><sub>Cameras (no bridge configured) · day</sub></td>
+    <td align="center"><img src="docs/images/tabs/control-night.png" alt="Cameras (no bridge configured), night mode" width="100%"><br><sub>Cameras (no bridge configured) · night</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/tabs/agents-day.png" alt="Assistant, day mode" width="100%"><br><sub>Assistant · day</sub></td>
+    <td align="center"><img src="docs/images/tabs/agents-night.png" alt="Assistant, night mode" width="100%"><br><sub>Assistant · night</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/tabs/stocks-day.png" alt="Stocks, day mode" width="100%"><br><sub>Stocks · day</sub></td>
+    <td align="center"><img src="docs/images/tabs/stocks-night.png" alt="Stocks, night mode" width="100%"><br><sub>Stocks · night</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/tabs/music-day.png" alt="Music, day mode" width="100%"><br><sub>Music · day</sub></td>
+    <td align="center"><img src="docs/images/tabs/music-night.png" alt="Music, night mode" width="100%"><br><sub>Music · night</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/tabs/timers-day.png" alt="Timers, day mode" width="100%"><br><sub>Timers · day</sub></td>
+    <td align="center"><img src="docs/images/tabs/timers-night.png" alt="Timers, night mode" width="100%"><br><sub>Timers · night</sub></td>
+  </tr>
+</table>
+
+</details>
+
 **Explore:** [Run the dashboard](#run-the-dashboard-locally) · [Supported frames](#working-frames) ·
 [Find your setup guide](#which-frame-do-you-have) · [Credits](#credits-and-services)
 
