@@ -21,6 +21,7 @@ together in a touch-friendly display designed to stay visible across the room.
 - **Night:** a dark dashboard (`nightdash`) with dimmed cards for evening use. After a short idle time
   it falls back to the full-screen night clock, and the photo-frame ambient screen shows the same
   countdown for any running timer.
+- **Family names:** the sample family is Alex, Jordan, Casey and Sam. Tap the pencil on the Family card on Today (or Demo controls → Family names) to rename them. Names are saved on that frame only.
 - **Always on:** the YouTube/Spotify player keeps playing while background syncs (calendar, weather,
   cameras) refresh, and the on-screen keyboard no longer shrinks the stage.
 

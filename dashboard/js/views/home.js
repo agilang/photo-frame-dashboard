@@ -159,7 +159,7 @@
 
   function presence() {
     var homeCount = D.people.filter(function (person) { return person.home; }).length;
-    return '<div class="h-presence-label"><span>FAMILY</span><b>' + homeCount + ' home</b></div>' + D.people.map(function (p) {
+    return '<div class="h-presence-label"><span>FAMILY</span><b>' + homeCount + ' home</b><button class="h-edit" data-edit-family aria-label="Edit family names">' + App.icon('pencil', 16) + '</button></div>' + D.people.map(function (p) {
       var sub = p.home ? 'Home' : (p.eta ? '<b>ETA ' + p.eta + ' min</b>' : p.status);
       return '<div class="h-who' + (p.home ? ' is-home' : '') + '" style="' + App.pstyle(p) + '">' +
         App.avatar(p, 36, p.home ? '' : 'avatar--away') +

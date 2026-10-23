@@ -106,3 +106,16 @@ body { font-family: var(--sans); font-weight: 450; letter-spacing: -.011em; }
 .stage[data-mode="nightdash"] .camera-empty { background: #1B293B; border-color: #2D3B50; color: #E8EEF7; }
 .stage[data-mode="nightdash"] .camera-view-head h1 { color: #E8EEF7; }
 .stage[data-mode="nightdash"] .camera-view-head p { color: #A9B8CC; }
+
+/* Family names editor */
+.h-edit { margin-left: 8px; width: 28px; height: 28px; display: inline-grid; place-items: center; border: 0; border-radius: 50%; background: rgba(29, 36, 51, .08); color: var(--ink-2); vertical-align: middle; }
+.h-presence-label { display: flex; align-items: center; justify-content: space-between; }
+.sheet--fam { width: min(520px, 92%); }
+.fam-sheet h2 { font-size: 34px; margin: 2px 0 6px; }
+.fam-note { color: var(--mute); font-size: 16px; margin-bottom: 14px; }
+.fam-row { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.fam-row input { flex: 1; min-height: 56px; padding: 0 18px; font-size: 22px; font-weight: 600; border: 2px solid var(--line); border-radius: 16px; background: #fff; color: var(--ink); }
+.fam-row input:focus { outline: 0; border-color: var(--c); }
+.fam-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px; }
+.fam-actions .btn { min-height: 52px; padding: 0 26px; font-size: 18px; }
+.stage[data-mode="nightdash"] .fam-row input { background: #172334; border-color: #2D3B50; color: #E8EEF7; }
