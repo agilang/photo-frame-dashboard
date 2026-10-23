@@ -305,12 +305,13 @@
   App.resetIdle = function () { idleSec = 0; };
 
   // ------------------------------------------------------------ stage scaling (desktop preview only)
-  var keyboardDismissUntil = 0;
+  var fitW = 0, fitH = 0;
   function fit() {
-    var active = document.activeElement;
-    var editing = active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName);
-    if (editing || Date.now() < keyboardDismissUntil) return;
-    var s = Math.min(window.innerWidth / 1280, window.innerHeight / 800);
+    var w = window.innerWidth, h = window.innerHeight;
+    // A big height drop at the same width is the soft keyboard: keep the last full-size scale.
+    if (w === fitW && h < fitH * 0.75) return;
+    fitW = w; fitH = h;
+    var s = Math.min(w / 1280, h / 800);
     $('#stage').style.transform = Math.abs(s - 1) < 0.01 ? '' : 'scale(' + s + ')';
   }
 
@@ -333,11 +334,7 @@
     fit();
     window.addEventListener('resize', fit);
     if (window.visualViewport) window.visualViewport.addEventListener('resize', fit);
-    document.addEventListener('focusout', function (event) {
-      if (!event.target || !/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)) return;
-      keyboardDismissUntil = Date.now() + 700;
-      setTimeout(fit, 750);
-    });
+    document.addEventListener('focusout', function () { setTimeout(fit, 300); });
     // Switch tabs the instant a finger lands (pointerdown), not on release. Keyboard "clicks"
     // (detail === 0) still work.
     $('#rail').addEventListener('pointerdown', function (e) {

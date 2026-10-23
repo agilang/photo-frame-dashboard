@@ -100,7 +100,7 @@
     musicTimerDeadline = 0;
     musicTimerExpired = true;
     var frame = viewEl && viewEl.querySelector('.music-player iframe');
-    if (frame) frame.src = 'about:blank';
+    if (frame) { frame.src = 'about:blank'; frame.dataset.loaded = ''; }
     updateTimerControls();
   }
 
@@ -124,8 +124,8 @@
     empty.hidden = true;
     player.querySelector('[data-music-provider]').textContent = embed.provider + ' player';
     frame.allow = 'autoplay; encrypted-media; fullscreen; picture-in-picture';
-    if (musicTimerExpired) frame.src = 'about:blank';
-    else if (frame.src !== embed.url) frame.src = embed.url;
+    if (musicTimerExpired) { frame.src = 'about:blank'; frame.dataset.loaded = ''; }
+    else if (frame.dataset.loaded !== embed.url) { frame.dataset.loaded = embed.url; frame.src = embed.url; }
     updateTimerControls();
   }
 
@@ -202,7 +202,7 @@
     if (liveFrame && savedUrl && !musicTimerExpired) {
       var embed = getEmbed(savedUrl);
       var fresh = viewEl.querySelector('.music-player iframe');
-      if (embed && liveFrame.src === embed.url && fresh) fresh.parentNode.replaceChild(liveFrame, fresh);
+      if (embed && liveFrame.dataset.loaded === embed.url && fresh) fresh.parentNode.replaceChild(liveFrame, fresh);
     }
     renderPlayer();
     var searchInput = viewEl.querySelector('[name="musicSearch"]');

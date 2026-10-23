@@ -1,0 +1,104 @@
+/* "Glass" skin, iOS-like: cool greys, system blue, frosted rail, borderless white cards. Day modes only; night keeps its own palette. */
+@font-face { font-family: 'Geist'; font-style: normal; font-weight: 100 900; font-display: swap; src: url('/fonts/geist-latin-wght-normal.woff2') format('woff2'); }
+:root {
+  --sans: 'Geist', -apple-system, 'Roboto', system-ui, sans-serif;
+  --serif: 'Geist', -apple-system, 'Roboto', system-ui, sans-serif;
+  --paper: #F2F4F9;
+  --ink: #1C1C1E;
+  --ink-rgb: 28 28 30;
+  --ink-2: #48484A;
+  --mute: #8E8E93;
+  --line: rgba(60, 60, 67, .12);
+  --ok: #30B455;
+  --alert: #FF453A;
+  --r: 28px;
+  --r-s: 20px;
+  --accent: #1D2433;
+  --accent-2: #3A4560;
+}
+html, body { background: #E9EDF5; }
+.stage:not([data-mode="nightdash"]),
+.stage:not([data-mode="nightdash"]) .views {
+  background:
+    radial-gradient(640px 420px at 0% 0%, rgba(150, 180, 220, .28), transparent 70%),
+    radial-gradient(640px 460px at 100% 100%, rgba(120, 140, 170, .16), transparent 70%),
+    #F2F4F9;
+}
+.stage { grid-template-columns: 104px 1fr; }
+.view { padding: 26px 30px 26px 12px; }
+
+/* Rail: frosted capsule */
+.rail { margin: 16px 0 16px 16px; padding: 14px 8px; gap: 2px; border-radius: 36px; background: rgba(255, 255, 255, .7); -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6); border: 1px solid rgba(255, 255, 255, .9); box-shadow: 0 10px 34px rgba(30, 50, 90, .10); color: var(--ink-2); }
+.rail-item { width: 70px; height: 64px; border-radius: 22px; color: var(--mute); font-weight: 600; }
+.rail-item.is-active, .rail-item.is-active:active { background: var(--accent); color: #fff; box-shadow: 0 8px 20px rgba(29, 36, 51, .3); }
+.rail-item:active { background: rgba(29, 36, 51, .08); }
+.rail-clock { color: var(--ink); }
+.rail-clock span { color: var(--mute); }
+
+/* Cards: borderless white, whisper shadow */
+.card, .sum, .ch-lane, .ag-card, .ag-chat-log, .ag-chat-form,
+.h-clock, .h-weather, .h-presence, .h-lane, .h-chores, .h-shop, .h-status {
+  background: rgba(255, 255, 255, .86);
+  border: 0;
+  box-shadow: 0 1px 2px rgba(30, 50, 90, .05), 0 12px 32px rgba(30, 50, 90, .07);
+}
+.h-clock, .h-weather, .h-presence { border-radius: var(--r); }
+.h-chores, .h-shop, .h-status, .h-photo { border-radius: 28px; }
+.h-photo { box-shadow: 0 16px 38px rgba(30, 50, 90, .20); }
+.h-hero { border-radius: 30px; box-shadow: 0 20px 44px rgba(29, 36, 51, .26); }
+.h-hero--empty { background: linear-gradient(145deg, #0A84FF, #3AA0FF 55%, #5AC8FA); }
+.h-hero--empty, .h-hero--empty .h-hero-title, .h-hero--empty .h-hero-meta { color: #fff; }
+.h-hero--empty .label { color: rgba(255, 255, 255, .8); }
+.h-lane { border-top-width: 0; border-left: 5px solid var(--c); border-radius: 22px; }
+.h-time { font-weight: 700; letter-spacing: -.06em; color: var(--ink); }
+.label { color: var(--mute); outline: 0; letter-spacing: .1em; font-weight: 600; }
+.h-wx-temp { font-weight: 700; }
+
+/* Controls */
+.btn { border-radius: 999px; }
+.btn.primary, .btn--primary { background: var(--accent); border-color: transparent; color: #fff; box-shadow: 0 6px 16px rgba(29, 36, 51, .28); }
+
+body { font-family: var(--sans); font-weight: 450; letter-spacing: -.011em; }
+.serif, .h-hero-title { font-family: var(--sans); font-weight: 650; letter-spacing: -.03em; }
+.h-hero-title i { font-style: normal; font-weight: 500; opacity: .85; }
+.h-time { font-weight: 600; letter-spacing: -.055em; }
+.num { letter-spacing: -.045em; }
+
+/* More prominent active rail tab: filled pill with glow and a bar marker */
+.rail-item.is-active, .rail-item.is-active:active { background: linear-gradient(160deg, #3A4560, #1D2433); box-shadow: 0 10px 24px rgba(29, 36, 51, .4), 0 0 0 4px rgba(29, 36, 51, .1); font-weight: 700; transform: scale(1.06); }
+.rail-item.is-active .i { stroke-width: 2.2; }
+
+/* Hero: photo background with blue scrim */
+.h-hero--empty {
+  background:
+    linear-gradient(100deg, rgba(14, 20, 32, .78), rgba(14, 20, 32, .35) 70%, rgba(14, 20, 32, .08)),
+    url('https://picsum.photos/id/29/900/420') center / cover,
+    linear-gradient(145deg, #1D2433, #3A4560);
+}
+
+/* Frosted glass cards, tighter spacing */
+.card, .sum, .ch-lane, .ag-card, .ag-chat-log, .ag-chat-form,
+.h-clock, .h-weather, .h-presence, .h-lane, .h-chores, .h-shop, .h-status,
+.s-head, .s-list, .s-tile, .t-card, .c-card {
+  background: rgba(255, 255, 255, .8);
+  border: 1px solid rgba(255, 255, 255, .9);
+  box-shadow: 0 1px 2px rgba(30, 50, 90, .05), 0 10px 28px rgba(30, 50, 90, .08);
+}
+.view { padding: 18px 22px 18px 10px; }
+.home { gap: 14px; }
+.h-main { gap: 14px; }
+.h-side { gap: 12px; }
+.h-clock, .h-weather, .h-presence { padding-top: 12px; padding-bottom: 12px; }
+
+/* Other tabs: same surfaces and accent */
+.seg button.is-active, .seg .is-active, .cal-seg .is-active { background: var(--accent); color: #fff; }
+.s-tile.is-on { background: rgba(29, 36, 51, .08); border-color: rgba(29, 36, 51, .3); color: var(--ink); }
+.ag-chat-message.is-user, .ag-chat-message--user { background: var(--accent); color: #fff; }
+.ag-chat-form textarea, .s-add input, input[type="text"], input[type="search"] { background: rgba(255, 255, 255, .7); border-radius: 16px; }
+.s-add { background: rgba(255, 255, 255, .6); border: 1px solid rgba(255, 255, 255, .85); }
+.s-add input { color: var(--ink); }
+.s-tile { background: rgba(255, 255, 255, .6); border-color: rgba(255, 255, 255, .85); }
+.stage:not([data-mode="nightdash"]) .btn--solid { background: var(--accent); border-color: transparent; color: #fff; box-shadow: 0 6px 16px rgba(29, 36, 51, .28); }
+
+/* Neutral text accents (were teal/green) so everything shares one graphite accent */
+.h-wx-say b, .h-wx-say strong, .h-agenda-more, .h-more, [data-go="calendar"].link, .h-ag-link { color: var(--ink-2); }
