@@ -51,8 +51,8 @@ together in a touch-friendly display designed to stay visible across the room.
     <td align="center"><img src="docs/images/tabs/photos-night.png" alt="Photos, night mode" width="100%"><br><sub>Photos · night</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/images/tabs/control-day.png" alt="Cameras (no bridge configured), day mode" width="100%"><br><sub>Cameras (no bridge configured) · day</sub></td>
-    <td align="center"><img src="docs/images/tabs/control-night.png" alt="Cameras (no bridge configured), night mode" width="100%"><br><sub>Cameras (no bridge configured) · night</sub></td>
+    <td align="center"><img src="docs/images/tabs/control-day.png" alt="Cameras, day mode" width="100%"><br><sub>Cameras · day</sub></td>
+    <td align="center"><img src="docs/images/tabs/control-night.png" alt="Cameras, night mode" width="100%"><br><sub>Cameras · night</sub></td>
   </tr>
   <tr>
     <td align="center"><img src="docs/images/tabs/agents-day.png" alt="Assistant, day mode" width="100%"><br><sub>Assistant · day</sub></td>

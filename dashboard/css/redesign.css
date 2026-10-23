@@ -102,3 +102,7 @@ body { font-family: var(--sans); font-weight: 450; letter-spacing: -.011em; }
 
 /* Neutral text accents (were teal/green) so everything shares one graphite accent */
 .h-wx-say b, .h-wx-say strong, .h-agenda-more, .h-more, [data-go="calendar"].link, .h-ag-link { color: var(--ink-2); }
+.stage[data-mode="nightdash"] .camera-view-head,
+.stage[data-mode="nightdash"] .camera-empty { background: #1B293B; border-color: #2D3B50; color: #E8EEF7; }
+.stage[data-mode="nightdash"] .camera-view-head h1 { color: #E8EEF7; }
+.stage[data-mode="nightdash"] .camera-view-head p { color: #A9B8CC; }
