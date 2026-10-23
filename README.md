@@ -27,7 +27,7 @@ together in a touch-friendly display designed to stay visible across the room.
 ## Screenshots of every tab
 
 <details>
-<summary>Day and night views of all ten tabs (sample data)</summary>
+<summary>Day and night views of all ten tabs (sample data; camera photo credits in <a href="docs/images/tabs/CREDITS.md">CREDITS</a>)</summary>
 
 <table>
   <tr>
